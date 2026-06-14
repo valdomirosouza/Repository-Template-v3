@@ -38,19 +38,20 @@ parallel tree**.
 What is actually implemented vs. decided-but-pending. Each gap names an owner; close it in a
 dedicated follow-up PR (this guide is docs-only).
 
-| Control                                      | Status                                   | Evidence / Owner                                                                             |
-| -------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Per-env Terraform (dev/staging/prod)         | **Implemented**                          | `terraform/environments/*` call shared modules with per-env vars                             |
-| Remote state (staging/prod)                  | **Implemented**                          | S3 backend + DynamoDB lock (`encrypt = true`); dev uses local backend by design              |
-| State bootstrap (bucket + lock table as IaC) | **Gap** — pre-created out of band        | DevOps                                                                                       |
-| Environment promotion model                  | **Implemented**                          | per-env modules + Helm values; ADR-0006, `docs/sre/deployment-strategy.md`                   |
-| NetworkPolicies (default-deny + per-service) | **Implemented**                          | `k8s/network-policies/` (`default-deny-ingress.yaml`, …)                                     |
-| Pod Security (`securityContext`)             | **Implemented**                          | all service Helm charts (api-gateway, event-worker, domain-service) + bare manifest hardened |
-| Secrets — Vault target                       | **Partial** — decided, not deployed      | ADR-0008; today: `detect-secrets` + AWS Secrets Manager for DB creds — DevOps/Security       |
-| IaC policy-as-code (Checkov)                 | **Gap** — decided in ADR-0029, not wired | Trivy config scan **skips** `infrastructure/terraform` — DevOps                              |
-| Cost estimation in PR (Infracost)            | **Gap**                                  | DevOps/FinOps (ADR-0020)                                                                     |
-| Drift detection (scheduled `terraform plan`) | **Gap**                                  | SRE/DevOps                                                                                   |
+| Control                                      | Status                              | Evidence / Owner                                                                                         |
+| -------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Per-env Terraform (dev/staging/prod)         | **Implemented**                     | `terraform/environments/*` call shared modules with per-env vars                                         |
+| Remote state (staging/prod)                  | **Implemented**                     | S3 backend + DynamoDB lock (`encrypt = true`); dev uses local backend by design                          |
+| State bootstrap (bucket + lock table as IaC) | **Gap** — pre-created out of band   | DevOps                                                                                                   |
+| Environment promotion model                  | **Implemented**                     | per-env modules + Helm values; ADR-0006, `docs/sre/deployment-strategy.md`                               |
+| NetworkPolicies (default-deny + per-service) | **Implemented**                     | `k8s/network-policies/` (`default-deny-ingress.yaml`, …)                                                 |
+| Pod Security (`securityContext`)             | **Implemented**                     | all service Helm charts (api-gateway, event-worker, domain-service) + bare manifest hardened             |
+| Secrets — Vault target                       | **Partial** — decided, not deployed | ADR-0008; today: `detect-secrets` + AWS Secrets Manager for DB creds — DevOps/Security                   |
+| IaC policy-as-code (Checkov)                 | **Report mode** (ADR-0070 burn-in)  | `ci.yml` → _IaC Security Scan (Checkov)_, SARIF to Security tab; flip to blocking after burn-in — DevOps |
+| Cost estimation in PR (Infracost)            | **Gap**                             | DevOps/FinOps (ADR-0020)                                                                                 |
+| Drift detection (scheduled `terraform plan`) | **Gap**                             | SRE/DevOps                                                                                               |
 
-> The highest-priority remaining gap is the **Checkov** IaC gate — decided in ADR-0029 but not yet
-> wired (the Trivy config scan skips `infrastructure/terraform`). _(The api-gateway `securityContext`
-> gap was closed — all service charts now meet the hardened baseline.)_
+> Recently closed: the api-gateway `securityContext` gap (all service charts now meet the hardened
+> baseline), and the **Checkov** IaC scan (ADR-0029) is now wired in **report mode** (ADR-0070
+> burn-in). Remaining gaps: Infracost, TF drift detection, TF state bootstrap, and the Vault /
+> External-Secrets rollout (ADR-0008).

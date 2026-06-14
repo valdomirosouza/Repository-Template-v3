@@ -59,12 +59,13 @@ additionally drops all capabilities).
 
 - **Decided (ADR-0029):** a **Checkov** IaC security scan, blocking on `infrastructure/` changes,
   SARIF to the GitHub Security tab.
-- **Reality (owned gap):** Checkov is **not wired** in `ci.yml`, and the existing Trivy _config_ scan
-  explicitly **skips `infrastructure/terraform`**. So Terraform is currently unscanned for
-  misconfiguration despite the ADR.
-- **Recommended:** add Checkov (and `terraform fmt -check`/`validate`) in **report mode** first
-  (ADR-0070 burn-in), then flip to blocking once clean. This closes the ADR-0029 ↔ implementation
-  drift. **Owner: DevOps.**
+- **Reality:** Checkov is now wired as the `iac-scan` job in `ci.yml`, scanning `infrastructure/`
+  (terraform + Helm + K8s) and uploading SARIF to the code-scanning (Security) tab — closing the
+  ADR-0029 ↔ implementation drift. It complements the Trivy config scan (which covers Helm/K8s but
+  skips `infrastructure/terraform`).
+- **Mode:** **report mode** (`continue-on-error`, ADR-0070 burn-in) — findings warn and surface in
+  the Security tab but do not block yet. Flip to blocking once the burn-in criterion in
+  `docs/governance/gate-lifecycle.md` is met (HITL-approved `normal-change`). **Owner: DevOps.**
 
 ## 5. Cost estimation (FinOps)
 
