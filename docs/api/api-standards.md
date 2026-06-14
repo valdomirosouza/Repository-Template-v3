@@ -43,28 +43,35 @@ gap owned in [§9](#9-conformance--gaps) — no aspirational claim is presented 
 Use the shared error model — see [`error-model.md`](error-model.md). Status-code semantics, the RFC
 7807 target shape, and the typed-exception mapping live there; do not invent per-route error shapes.
 
-## 5. Pagination **(target)**
+## 5. Pagination
 
-List endpoints SHOULD NOT return unbounded arrays (today `/v1/hitl/requests` does — §9). Standard:
+Implemented (`src/api/rest/pagination.py`), **backward-compatible** — the list body stays a JSON
+**array** so existing consumers are unaffected; pagination metadata is in headers:
 
-- **Cursor-based** for large/streaming collections: `?limit=` (default 50, max 200) + `?cursor=`;
-  return `next_cursor` (null at end).
-- Envelope: `{ "items": [...], "next_cursor": "...", "limit": 50 }`.
-- Offset pagination (`?offset=`) only for small, stable admin lists.
+- **Cursor-based:** `?limit=` (default 50, max 200) + `?cursor=` (opaque). Response headers:
+  `X-Limit`, `X-Total-Returned`, and `X-Next-Cursor` (present only when more results remain).
+- A malformed `cursor` returns `400`. Applied to `/v1/hitl/requests`; reuse the helper for new lists.
+- The opaque cursor currently encodes an offset; clients must treat it as opaque so it can become a
+  keyset cursor later without breaking the contract. (An `{items, next_cursor}` envelope would be a
+  breaking change — deferred to `/v2`, like the error content-type.)
 
-## 6. Idempotency **(target)**
+## 6. Idempotency
 
-- Unsafe, retryable POSTs SHOULD accept an `Idempotency-Key` header; the same key returns the same
-  result within a TTL window (store keyed by `(route, key)`).
-- `POST /v1/requests` is naturally idempotent only in that it mints a new id per call — that is **not**
-  retry-safe; an `Idempotency-Key` is the standard fix (§9).
+Implemented (`src/api/rest/idempotency.py`):
+
+- Retryable POSTs accept an `Idempotency-Key` header; the same key replays the cached response within
+  a TTL window **without re-running side effects** (store keyed by `(route, key)`).
+- Activates only when the header is present AND a store is wired (`app.state.idempotency_store`,
+  Redis-backed with an in-memory fallback) — otherwise behaviour is unchanged. Applied to
+  `POST /v1/requests`.
 
 ## 7. Rate limiting
 
 - Implemented via `slowapi` (`src/api/rest/_limiter.py`); per-JWT-`sub` bucket, falling back to client
   IP. Limit: `rate_limit_requests_per_minute`.
-- Return `429` on limit; capacity exhaustion returns `503`. Both SHOULD carry `Retry-After`.
-- **(target)** Emit `X-RateLimit-Limit` / `X-RateLimit-Remaining` headers (not present today — §9).
+- Return `429` on limit; capacity exhaustion returns `503`. Both carry `Retry-After`.
+- `headers_enabled=True` emits `X-RateLimit-Limit` / `X-RateLimit-Remaining` / `X-RateLimit-Reset` on
+  rate-limited routes (each such route takes a `response: Response` param so slowapi can inject them).
 
 ## 8. Payloads & validation
 
@@ -76,18 +83,18 @@ List endpoints SHOULD NOT return unbounded arrays (today `/v1/hitl/requests` doe
 
 ## 9. Conformance & gaps
 
-| Standard                                         | Status                                                     | Owner    |
-| ------------------------------------------------ | ---------------------------------------------------------- | -------- |
-| URL versioning `/v1/` (ADR-0024)                 | **Implemented**                                            | —        |
-| JWT Bearer auth, identity-from-token             | **Implemented**                                            | —        |
-| Per-endpoint `security` documented in OpenAPI    | **Partial** — verify each op                               | Platform |
-| `X-Request-Id` + correlation middleware          | **Implemented** — `src/api/rest/correlation.py`            | —        |
-| `trace_id` in REST errors                        | **Implemented** — structured error body                    | —        |
-| Structured error body + typed domain errors      | **Implemented** — `src/api/rest/errors.py`                 | —        |
-| Pagination on list endpoints                     | **Gap** — `/v1/hitl/requests` unbounded                    | Platform |
-| `Idempotency-Key` on unsafe POSTs                | **Gap**                                                    | Platform |
-| `X-RateLimit-*` headers                          | **Gap** (limiting works; headers absent)                   | Platform |
-| RFC 7807 `application/problem+json` content-type | **Deferred** — `/v2` bump (ADR-0024); see `error-model.md` | Platform |
+| Standard                                         | Status                                                                                  | Owner    |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------- | -------- |
+| URL versioning `/v1/` (ADR-0024)                 | **Implemented**                                                                         | —        |
+| JWT Bearer auth, identity-from-token             | **Implemented**                                                                         | —        |
+| Per-endpoint `security` documented in OpenAPI    | **Partial** — verify each op                                                            | Platform |
+| `X-Request-Id` + correlation middleware          | **Implemented** — `src/api/rest/correlation.py`                                         | —        |
+| `trace_id` in REST errors                        | **Implemented** — structured error body                                                 | —        |
+| Structured error body + typed domain errors      | **Implemented** — `src/api/rest/errors.py`                                              | —        |
+| Pagination on list endpoints                     | **Implemented** — cursor pagination, `src/api/rest/pagination.py` (`/v1/hitl/requests`) | —        |
+| `Idempotency-Key` on unsafe POSTs                | **Implemented** — `src/api/rest/idempotency.py` (`POST /v1/requests`)                   | —        |
+| `X-RateLimit-*` headers                          | **Implemented** — slowapi `headers_enabled` (`src/api/rest/_limiter.py`)                | —        |
+| RFC 7807 `application/problem+json` content-type | **Deferred** — `/v2` bump (ADR-0024); see `error-model.md`                              | Platform |
 
 Each gap should be closed under a referenced spec/ADR, not silently. Until then, this page is the
 agreed **target** — implementers must not assume a gap is already satisfied.
