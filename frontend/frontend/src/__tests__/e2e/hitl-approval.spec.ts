@@ -1,20 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * HITL operator approval journey — runs against MOCK MODE (NEXT_PUBLIC_HITL_MOCK=1), so no backend
- * or operator JWT is required. Start the app with mock mode, e.g.:
- *
- *   NEXT_PUBLIC_HITL_MOCK=1 pnpm dev      # then: pnpm e2e
- *
- * Skipped automatically unless E2E_HITL_MOCK=1 is set, so it never fails a default CI run that has
- * no mock-mode server.
+ * HITL operator approval journey — runs against MOCK MODE, so no backend or operator JWT is
+ * required. The Playwright webServer (playwright.config.ts) starts `pnpm dev` with
+ * NEXT_PUBLIC_HITL_MOCK=1, so `pnpm e2e` works standalone in CI and locally.
  */
 test.describe("HITL approval queue (mock mode)", () => {
-  test.skip(
-    process.env.E2E_HITL_MOCK !== "1",
-    "set E2E_HITL_MOCK=1 with a mock-mode server running",
-  );
-
   test("operator approves a request and it leaves the queue", async ({ page }) => {
     await page.goto("/hitl");
 
