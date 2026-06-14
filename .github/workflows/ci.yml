@@ -410,33 +410,34 @@ jobs:
   iac-scan:
     name: IaC Security Scan (Checkov)
     runs-on: ubuntu-latest
-    # ADR-0029 §1 mandates a Checkov IaC scan on infrastructure/ changes. Added here in REPORT MODE
-    # (ADR-0070 burn-in): both steps are continue-on-error so findings warn + surface in the Security
-    # tab but do NOT block yet. Flip to blocking (remove the continue-on-error lines) after the
-    # burn-in criterion in docs/governance/gate-lifecycle.md is met (HITL-approved normal-change).
-    # Complements the Trivy config scan, which covers Helm/K8s but skips infrastructure/terraform.
+    # ADR-0029 §1 mandates a Checkov IaC scan on infrastructure/ changes. REPORT MODE (ADR-0070
+    # burn-in): findings are written to the job summary (advisory) and the step is continue-on-error,
+    # so the gate does NOT block. We intentionally do NOT upload SARIF in report mode — a code-scanning
+    # SARIF upload creates a separate, failing "Checkov" check whenever findings exist, which would
+    # defeat report mode. When this gate flips to blocking (after the burn-in in
+    # docs/governance/gate-lifecycle.md is met, HITL-approved normal-change), restore the SARIF upload
+    # to GitHub code scanning and drop continue-on-error. Complements the Trivy config scan, which
+    # covers Helm/K8s but skips infrastructure/terraform.
     permissions:
       contents: read
-      security-events: write # upload SARIF to code scanning
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
-      - name: Run Checkov on infrastructure/ (report mode)
+      - name: Run Checkov on infrastructure/ (report mode → job summary)
         continue-on-error: true
         run: |
           pip install --quiet checkov
-          mkdir -p checkov_report
-          checkov --directory infrastructure --soft-fail --compact \
-            --output sarif --output-file-path checkov_report
-      - name: Upload Checkov SARIF to code scanning
-        if: always()
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3
-        with:
-          sarif_file: checkov_report
-          category: checkov-iac
+          {
+            echo "### Checkov IaC scan — report mode (ADR-0070 burn-in)"
+            echo ""
+            echo "Advisory only until this gate flips to blocking; SARIF→Security-tab returns then."
+            echo ""
+            echo '```'
+            checkov --directory infrastructure --compact --quiet --soft-fail 2>&1 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   contract-drift:
     name: Contract Drift Check

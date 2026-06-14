@@ -60,12 +60,14 @@ additionally drops all capabilities).
 - **Decided (ADR-0029):** a **Checkov** IaC security scan, blocking on `infrastructure/` changes,
   SARIF to the GitHub Security tab.
 - **Reality:** Checkov is now wired as the `iac-scan` job in `ci.yml`, scanning `infrastructure/`
-  (terraform + Helm + K8s) and uploading SARIF to the code-scanning (Security) tab — closing the
-  ADR-0029 ↔ implementation drift. It complements the Trivy config scan (which covers Helm/K8s but
-  skips `infrastructure/terraform`).
-- **Mode:** **report mode** (`continue-on-error`, ADR-0070 burn-in) — findings warn and surface in
-  the Security tab but do not block yet. Flip to blocking once the burn-in criterion in
-  `docs/governance/gate-lifecycle.md` is met (HITL-approved `normal-change`). **Owner: DevOps.**
+  (terraform + Helm + K8s) — closing the ADR-0029 ↔ implementation drift. It complements the Trivy
+  config scan (which covers Helm/K8s but skips `infrastructure/terraform`).
+- **Mode:** **report mode** (`continue-on-error`, ADR-0070 burn-in) — findings are written to the CI
+  **job summary** (advisory) and do not block. SARIF is intentionally **not** uploaded in report
+  mode (a code-scanning SARIF upload creates a separate failing "Checkov" check whenever findings
+  exist, defeating report mode). When the gate flips to blocking — after the burn-in in
+  `docs/governance/gate-lifecycle.md` is met (HITL-approved `normal-change`) — restore the SARIF
+  upload to the Security tab and drop `continue-on-error`. **Owner: DevOps.**
 
 ## 5. Cost estimation (FinOps)
 
