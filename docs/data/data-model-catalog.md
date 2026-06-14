@@ -1,7 +1,7 @@
 # Data Model Catalog
 
 > **Owner:** Tech Lead + DPO | **Authoritative schema:** `alembic/versions/` (migrations) · Avro schemas in `infrastructure/message-broker/schema-registry/avro/`
-> **Related:** [`data-classification.md`](data-classification.md) · ADR-0013 (retention) · ADR-0018/0019 (encryption) · `services.yaml` (topics)
+> **Related:** [`data-classification.md`](data-classification.md) · [`migrations.md`](migrations.md) · [`erd.md`](erd.md) · [`redis-key-naming.md`](redis-key-naming.md) · ADR-0013 (retention) · ADR-0018/0019 (encryption) · `services.yaml` (topics)
 
 A single index of every persisted entity: what it stores, who owns it, where it lives, its highest
 PII classification, encryption, retention, and how it is exposed. The migrations remain the
@@ -36,8 +36,8 @@ Production: `rediss://` (TLS, ADR-0019). In-memory fallbacks exist for local dev
 | Session memory     | agent session context | `SessionMemory`                              | masked                                      | session               |
 | Rate-limit buckets | throttling            | `slowapi`                                    | none (IP / `sub`)                           | window                |
 
-> A Redis key-naming standard (prefixes, TTL conventions) and TTL-verification tests are a known gap
-> — see Wave 4 of the improvement plan. Document the convention here when it lands.
+> Redis key naming and TTLs follow the [`redis-key-naming.md`](redis-key-naming.md) standard
+> (`<domain>:<type>:<id>`, every key TTL'd) — verified by `tests/unit/storage/test_ttl_verification.py`.
 
 ## 3. Kafka topics (event-borne data)
 
