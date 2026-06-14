@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ApprovalCard } from "@/components/hitl/ApprovalCard";
-import { Configuration, DecisionInDecisionEnum, HitlApi, type HITLRequestSummary } from "@/lib/api";
+import { getHitlClient, isMockMode } from "@/lib/hitl/client";
+import type { HITLRequestSummary } from "@/lib/api";
 
-const api = new HitlApi(new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL }));
+const client = getHitlClient();
+const mockMode = isMockMode();
 
 export default function HITLQueuePage() {
   const [requests, setRequests] = useState<HITLRequestSummary[]>([]);
@@ -15,8 +17,9 @@ export default function HITLQueuePage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await api.listPendingRequests();
+      const data = await client.listPendingRequests();
       setRequests(data);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load requests");
     } finally {
@@ -31,13 +34,7 @@ export default function HITLQueuePage() {
   }, [load]);
 
   const handleDecision = async (id: string, approved: boolean, rationale: string) => {
-    await api.submitDecision({
-      requestId: id,
-      decisionIn: {
-        decision: approved ? DecisionInDecisionEnum.Approved : DecisionInDecisionEnum.Rejected,
-        rationale,
-      },
-    });
+    await client.submitDecision({ requestId: id, approved, rationale });
     setRequests((prev) => prev.filter((r) => r.requestId !== id));
   };
 
@@ -52,6 +49,23 @@ export default function HITLQueuePage() {
   return (
     <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
       <h1>HITL Approval Queue</h1>
+      {mockMode && (
+        <p
+          role="status"
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.5rem 0.75rem",
+            background: "#fef3c7",
+            border: "1px solid #f59e0b",
+            borderRadius: "4px",
+            fontSize: "0.8rem",
+            color: "#92400e",
+          }}
+        >
+          Mock mode — showing synthetic data, no backend. Set NEXT_PUBLIC_HITL_MOCK=0 to use the
+          live API.
+        </p>
+      )}
       <p style={{ color: "#6b7280", marginTop: "0.5rem" }}>
         {requests.length} pending request{requests.length !== 1 ? "s" : ""}
       </p>

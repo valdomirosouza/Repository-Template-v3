@@ -1,14 +1,13 @@
 const mockListPending = jest.fn();
 const mockSubmitDecision = jest.fn();
 
-jest.mock("@/lib/api", () => ({
-  HitlApi: jest.fn().mockImplementation(() => ({
+jest.mock("@/lib/hitl/client", () => ({
+  getHitlClient: () => ({
     listPendingRequests: mockListPending,
     submitDecision: mockSubmitDecision,
-  })),
-  Configuration: jest.fn(),
-  DecisionInDecisionEnum: { Approved: "APPROVED", Rejected: "REJECTED" },
-  HITLRequestSummaryStatusEnum: { Pending: "PENDING" },
+    hitlStatus: jest.fn(),
+  }),
+  isMockMode: () => false,
 }));
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -62,7 +61,8 @@ it("submits an APPROVED decision and removes the resolved card", async () => {
   await waitFor(() =>
     expect(mockSubmitDecision).toHaveBeenCalledWith({
       requestId: "req-1",
-      decisionIn: { decision: "APPROVED", rationale: "approved by operator" },
+      approved: true,
+      rationale: "approved by operator",
     }),
   );
   await waitFor(() => expect(screen.queryByText("write_file")).not.toBeInTheDocument());
