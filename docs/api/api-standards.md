@@ -34,7 +34,9 @@ gap owned in [§9](#9-conformance--gaps) — no aspirational claim is presented 
   bodies (see `error-model.md`).
 - Propagate W3C `traceparent`; the `trace_id` ties REST calls to the event envelope's `trace_id`
   (`specs/api/async-api-design.md`) and to OTel spans.
-- **(target)** A correlation middleware emitting `X-Request-Id` is not yet present — see §9.
+- **Implemented:** `CorrelationIdMiddleware` (`src/api/rest/correlation.py`) sets `X-Request-Id` on
+  every response and exposes `request.state.request_id`/`trace_id` to handlers. A client-supplied
+  `X-Request-Id` is honoured only if it is a UUID (otherwise replaced — prevents log/response injection).
 
 ## 4. Errors
 
@@ -74,17 +76,18 @@ List endpoints SHOULD NOT return unbounded arrays (today `/v1/hitl/requests` doe
 
 ## 9. Conformance & gaps
 
-| Standard                                      | Status                                   | Owner    |
-| --------------------------------------------- | ---------------------------------------- | -------- |
-| URL versioning `/v1/` (ADR-0024)              | **Implemented**                          | —        |
-| JWT Bearer auth, identity-from-token          | **Implemented**                          | —        |
-| Per-endpoint `security` documented in OpenAPI | **Partial** — verify each op             | Platform |
-| `X-Request-Id` + correlation middleware       | **Gap**                                  | Platform |
-| `trace_id` in REST errors                     | **Gap** (present in events)              | Platform |
-| Pagination on list endpoints                  | **Gap** — `/v1/hitl/requests` unbounded  | Platform |
-| `Idempotency-Key` on unsafe POSTs             | **Gap**                                  | Platform |
-| `X-RateLimit-*` headers                       | **Gap** (limiting works; headers absent) | Platform |
-| RFC 7807 error shape                          | **Gap** — see `error-model.md`           | Platform |
+| Standard                                         | Status                                                     | Owner    |
+| ------------------------------------------------ | ---------------------------------------------------------- | -------- |
+| URL versioning `/v1/` (ADR-0024)                 | **Implemented**                                            | —        |
+| JWT Bearer auth, identity-from-token             | **Implemented**                                            | —        |
+| Per-endpoint `security` documented in OpenAPI    | **Partial** — verify each op                               | Platform |
+| `X-Request-Id` + correlation middleware          | **Implemented** — `src/api/rest/correlation.py`            | —        |
+| `trace_id` in REST errors                        | **Implemented** — structured error body                    | —        |
+| Structured error body + typed domain errors      | **Implemented** — `src/api/rest/errors.py`                 | —        |
+| Pagination on list endpoints                     | **Gap** — `/v1/hitl/requests` unbounded                    | Platform |
+| `Idempotency-Key` on unsafe POSTs                | **Gap**                                                    | Platform |
+| `X-RateLimit-*` headers                          | **Gap** (limiting works; headers absent)                   | Platform |
+| RFC 7807 `application/problem+json` content-type | **Deferred** — `/v2` bump (ADR-0024); see `error-model.md` | Platform |
 
 Each gap should be closed under a referenced spec/ADR, not silently. Until then, this page is the
 agreed **target** — implementers must not assume a gap is already satisfied.
