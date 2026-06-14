@@ -12,13 +12,23 @@ This directory contains agent-generated and human-approved discovery artefacts f
 ```
 docs/product/
 ├── state-template.yaml  ← Template for per-feature state manifests (copy into FEAT-{id}/)
+├── templates/           ← Product-conception templates (problem frame, persona, story map, value, metrics)
 └── FEAT-{id}/
     ├── state.yaml       ← Machine-readable feature state (phase, approvals, gates, allowed actions)
     ├── discovery.md      ← Phase 1: Agent-generated Discovery Primer; reviewed by Product + Tech Lead
     ├── nfr.md            ← Phase 2: NFR doc; Security Lead approval mandatory
+    ├── problem-framing-canvas.md ← Optional (product-facing): from templates/ — frames the problem
+    ├── persona.md               ← Optional (product-facing): user/buyer persona(s)
+    ├── user-story-map.md        ← Optional (product-facing): journey + MVP slice + AC→test map
+    ├── value-hypothesis.md      ← Optional (product-facing): measurable bet + kill criteria
+    ├── success-metrics.md       ← Optional (product-facing): metrics tied to real signals/SLOs
     ├── decisions.log     ← Chronological log of key decisions made during discovery
     └── spike-{slug}.md   ← Optional: spike findings (from a spike Issue)
 ```
+
+> The product-conception artefacts above are **recommended for product-facing features** (see
+> `docs/process/DEFINITION_OF_READY.md` §Product Discovery Artefacts) and copied from
+> `docs/product/templates/`. Go-to-market artefacts live separately in `docs/gtm/`.
 
 `{id}` matches the GitHub Issue number for the parent feature request.
 
