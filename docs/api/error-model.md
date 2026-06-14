@@ -87,14 +87,18 @@ Rules:
 
 ## 5. Conformance & gaps
 
-| Capability                                         | Status                                               | Owner    |
-| -------------------------------------------------- | ---------------------------------------------------- | -------- |
-| RFC 7807 `problem+json` shape                      | **Gap** — currently `{"detail": …}`                  | Platform |
-| `request_id` in error body + `X-Request-Id` header | **Gap** — not emitted today                          | Platform |
-| `trace_id` correlation in errors                   | **Gap** — present in event envelope, not REST errors | Platform |
-| Central exception handler → problem mapping        | **Gap** — errors raised per-route                    | Platform |
-| `401`/`403`/`404`/`422`/`429`/`503` semantics      | **Implemented**                                      | —        |
+| Capability                                           | Status                                                                                                                            | Owner    |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Structured error body (superset of `{"detail": …}`)  | **Implemented** — `src/api/rest/errors.py` adds `type`/`title`/`status`/`instance`/`request_id`/`trace_id` while keeping `detail` | Platform |
+| `request_id` in error body + `X-Request-Id` header   | **Implemented** — `src/api/rest/correlation.py` (`CorrelationIdMiddleware`)                                                       | Platform |
+| `trace_id` correlation in errors                     | **Implemented** — captured from the active OTel span                                                                              | Platform |
+| Central exception handler → structured mapping       | **Implemented** — `install_error_handlers` (DomainError + HTTPException)                                                          | Platform |
+| Typed domain errors                                  | **Implemented** — `NotFoundError`/`ConflictError`/`AuthorizationError`                                                            | Platform |
+| RFC 7807 `application/problem+json` **content-type** | **Deferred** — breaking change for the frontend Pact consumer; `/v2` bump (ADR-0024)                                              | Platform |
+| `401`/`403`/`404`/`422`/`429`/`503` semantics        | **Implemented**                                                                                                                   | —        |
 
-Adopt incrementally: add the central handler + correlation middleware first (closes three gaps at
-once), then migrate routes. Track adoption in the owning feature spec; do not claim conformance until
-the handler exists.
+The central handler + correlation middleware landed first (closing four gaps at once) while keeping
+the `application/json` content-type and `detail` field, so the frontend consumer contract
+(`tests/contract/pacts/frontend-api_gateway.json`) is preserved. The only remaining item — switching
+the content-type to `application/problem+json` — is a breaking change and is deferred to a `/v2`
+version bump (ADR-0024). The 422 validation handler stays FastAPI-default by design.
