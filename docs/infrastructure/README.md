@@ -42,7 +42,7 @@ dedicated follow-up PR (this guide is docs-only).
 | -------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Per-env Terraform (dev/staging/prod)         | **Implemented**                     | `terraform/environments/*` call shared modules with per-env vars                                                               |
 | Remote state (staging/prod)                  | **Implemented**                     | S3 backend + DynamoDB lock (`encrypt = true`); dev uses local backend by design                                                |
-| State bootstrap (bucket + lock table as IaC) | **Gap** — pre-created out of band   | DevOps                                                                                                                         |
+| State bootstrap (bucket + lock table as IaC) | **Implemented**                     | `terraform/bootstrap/` (versioned, encrypted, TLS-only bucket + lock table) — `terraform validate` clean                       |
 | Environment promotion model                  | **Implemented**                     | per-env modules + Helm values; ADR-0006, `docs/sre/deployment-strategy.md`                                                     |
 | NetworkPolicies (default-deny + per-service) | **Implemented**                     | `k8s/network-policies/` (`default-deny-ingress.yaml`, …)                                                                       |
 | Pod Security (`securityContext`)             | **Implemented**                     | all service Helm charts (api-gateway, event-worker, domain-service) + bare manifest hardened                                   |
@@ -53,5 +53,6 @@ dedicated follow-up PR (this guide is docs-only).
 
 > Recently closed: the api-gateway `securityContext` gap (all service charts now meet the hardened
 > baseline), and the **Checkov** IaC scan (ADR-0029) is now wired in **report mode** (ADR-0070
-> burn-in). Remaining gaps: Infracost, TF drift detection, TF state bootstrap, and the Vault /
+> burn-in), and the TF **state bootstrap** module (`terraform/bootstrap/`). Remaining gaps:
+> Infracost, TF drift detection, and the Vault /
 > External-Secrets rollout (ADR-0008).

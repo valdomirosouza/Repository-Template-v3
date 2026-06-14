@@ -29,12 +29,14 @@ The S3 bucket name (`your-org-terraform-state`) is a **template placeholder** â€
 adoption (`make template-init` / `docs/governance/owner-onboarding.md`). State is encrypted at rest
 and locked via DynamoDB to prevent concurrent applies.
 
-### State bootstrap (owned gap)
+### State bootstrap
 
-The state bucket and DynamoDB lock table are currently assumed **pre-created out of band** â€” there is
-no bootstrap module. Recommended: a tiny one-time `terraform/bootstrap/` (local backend) that
-provisions the versioned, encrypted S3 bucket + lock table, then migrate. Until it exists, document
-the manual creation steps in the org runbook. **Owner: DevOps.**
+The state bucket and DynamoDB lock table are provisioned by a one-time, local-backend module:
+[`infrastructure/terraform/bootstrap/`](../../infrastructure/terraform/bootstrap/README.md). It
+creates a **versioned, encrypted, public-access-blocked, TLS-only** S3 state bucket and a
+`PAY_PER_REQUEST` DynamoDB lock table (with point-in-time recovery), then you point each
+environment's `backend "s3"` block at its outputs (`terraform output backend_config_hint`). Run it
+once per AWS account before the first environment `apply`.
 
 ## 3. Workflow
 
