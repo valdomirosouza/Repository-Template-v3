@@ -1,6 +1,11 @@
-# SLOs — golden-signals service (SPEC-LGS-001 §10; ADR-0043–0046)
-# NOTE: these are the SLOs of the service ITSELF, distinct from the Golden Signals it COMPUTES
-# about HAProxy traffic. Thresholds marked [CONFIRM] need SRE-Lead + agent-governance sign-off.
+# Long-term SLO OBJECTIVES — golden-signals service (SPEC-LGS-001 §10; ADR-0043–0046)
+# NOTE: these are the 30d/7d SLO objectives of the service ITSELF, distinct from the Golden Signals
+# it COMPUTES about HAProxy traffic. Thresholds marked [CONFIRM] need SRE-Lead + agent-governance
+# sign-off.
+#
+# This file is NOT read by cd-production.yml. The CANARY-gate thresholds the production pipeline
+# reads at runtime live in the sibling canary file `golden-signals.yaml` (ADR-0073). Keep the two
+# consistent: canary thresholds are intentionally more permissive than these 30d objectives.
 service: golden-signals
 slos:
   - id: analytics-availability

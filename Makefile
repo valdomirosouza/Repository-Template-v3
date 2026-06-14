@@ -15,6 +15,7 @@ APP         ?= frontend
         test-frontend test-unit-frontend lint-frontend format-frontend build-frontend run-frontend \
         gen-proto-go gen-proto-python gen-sources-java gen-api-client-ts gen-api-client-python \
         gen-context-graph check-version check-versions check-placeholders doctor version \
+        check-traceability check-runbook-links check-service-slo-files verify-traceability \
         verify-f7-hook sync-develop \
         template-init init \
         new-service \
@@ -236,6 +237,18 @@ check-slo-thresholds: ## Fail if canary/error-budget thresholds are hard-coded i
 
 check-outbound-urls: ## Fail if an outbound-HTTP boundary skips the SSRF allow-list (OWASP A10)
 	@uv run python scripts/governance/check_outbound_urls.py
+
+check-traceability: ## Fail if services.yaml references a missing ADR/topic/schema/dependency (ADR-0073). STRICT=1 also blocks on AsyncAPI drift
+	@uv run python scripts/governance/check_traceability.py $${STRICT:+--strict}
+
+check-runbook-links: ## Fail if a runbook link (indexes + SLO files) points at a non-existent file
+	@uv run python scripts/governance/check_runbook_links.py
+
+check-service-slo-files: ## Fail if a canary-deployed service has no valid per-service SLO file (ADR-0073)
+	@uv run python scripts/governance/check_service_slo_files.py
+
+verify-traceability: check-traceability check-runbook-links check-service-slo-files ## Run all repository traceability gates (service registry, runbook links, per-service SLO files)
+	@echo "✓ traceability gates passed"
 
 verify-f7-hook: ## Verify the F7 high-risk-action guard hook (decision logic + settings.json wiring; issue #133)
 	@python3 .claude/hooks/verify-high-risk-guard.py
