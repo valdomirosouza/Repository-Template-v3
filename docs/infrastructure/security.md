@@ -35,12 +35,10 @@ containers:
       capabilities: { drop: ["ALL"] }
 ```
 
-Implemented today in `helm/event-worker`, `helm/domain-service`, and the bare K8s manifest
-(`runAsNonRoot`, `readOnlyRootFilesystem`, `capabilities: drop ["ALL"]`).
-
-> **⚠ Owned gap (high priority):** the **api-gateway** Helm template does **not** declare a
-> `securityContext` — it should match the baseline above. Track as a Platform follow-up (manifest
-> change, out of this docs-only PR).
+Implemented in **all** service Helm charts — `helm/api-gateway`, `helm/event-worker`,
+`helm/domain-service` — and the bare K8s manifest: pod-level `runAsNonRoot`/`runAsUser`/`fsGroup` and
+container-level `allowPrivilegeEscalation: false`/`readOnlyRootFilesystem: true` (the bare manifest
+additionally drops all capabilities).
 
 ## 3. Secrets management
 
@@ -77,7 +75,7 @@ Implemented today in `helm/event-worker`, `helm/domain-service`, and the bare K8
 
 ## Summary
 
-Network isolation and most pod hardening are **in place**; the priority gaps are the **api-gateway
-`securityContext`** (security baseline not met for that surface) and the **Checkov gate** (decided but
-unenforced). Both are manifest/CI changes for dedicated follow-up PRs — this guide records the
-standard and the gap so neither is silently assumed done.
+Network isolation and pod hardening are **in place across all service charts**. The remaining
+priority gap is the **Checkov gate** (decided in ADR-0029 but unenforced — Trivy config scan skips
+`infrastructure/terraform`); secrets-via-Vault/External-Secrets and Infracost are also tracked gaps.
+This guide records the standard and each gap so none is silently assumed done.
