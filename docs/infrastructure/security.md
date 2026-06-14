@@ -50,10 +50,13 @@ additionally drops all capabilities).
   in `make lint` and pre-commit to block accidental commits.
 - **Production guards:** `Settings.reject_placeholder_secrets` blocks deploy if `DB_ENCRYPTION_KEY` /
   `REDIS_TLS_ENABLED` are unset (CLAUDE.md §3.2); Redis is `rediss://` (ADR-0019).
-- **Owned gap:** the Vault sidecar / external-secrets (or sealed-secrets) integration is **not yet
-  deployed**. Recommended: adopt the External Secrets Operator (`ExternalSecret` CRDs syncing from
-  Vault/Secrets Manager) so no plaintext secret is ever committed or stored in a K8s `Secret`.
-  **Owner: DevOps/Security.**
+- **Reference pattern (provided):** External Secrets Operator manifests live in
+  [`infrastructure/k8s/external-secrets/`](../../infrastructure/k8s/external-secrets/README.md) — a
+  Vault (primary) and an AWS Secrets Manager (fallback) `ClusterSecretStore`, plus an `ExternalSecret`
+  that materialises `api-gateway-secrets` (the chart's `secretRef`) so no plaintext secret is ever
+  committed or hand-created. **Partial:** these are templates — operator install + a live
+  Vault/Secrets-Manager backend is a per-environment step (real cluster + store). **Owner:
+  DevOps/Security.**
 
 ## 4. Policy-as-code (IaC scanning)
 
