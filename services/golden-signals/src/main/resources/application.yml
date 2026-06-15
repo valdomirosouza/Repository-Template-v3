@@ -35,8 +35,19 @@ management:
     export:
       prometheus:
         enabled: true
+  # Distributed tracing → OTel exported over OTLP/HTTP (parity with domain-service; SPEC-LGS-001
+  # §10, ADR-0043–0046). Spring Boot auto-instruments inbound /ingestion and /analytics requests
+  # as spans. Sampling defaults to full locally; set OTEL_TRACES_SAMPLER_ARG (e.g. 0.1) to
+  # sub-sample in shared environments. service.name on spans = spring.application.name above.
+  tracing:
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLER_ARG:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
 
 logging:
   pattern:
-    # Structured-ish console pattern carrying the trace id from MDC (NFR-03).
-    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [trace_id=%X{trace_id:-}] %logger{36} - %msg%n"
+    # Console pattern carrying both the OTel traceId/spanId (Micrometer Tracing MDC keys) and the
+    # X-Trace-Id correlation id from TraceIdFilter (NFR-03).
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [traceId=%X{traceId:-} spanId=%X{spanId:-} trace_id=%X{trace_id:-}] %logger{36} - %msg%n"
