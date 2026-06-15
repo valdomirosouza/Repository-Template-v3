@@ -49,11 +49,11 @@ dedicated follow-up PR (this guide is docs-only).
 | Secrets — Vault / External Secrets           | **Partial** — reference pattern provided | `k8s/external-secrets/` (ESO stores + ExternalSecret for `api-gateway-secrets`); operator deploy is per-env — DevOps/Security  |
 | IaC policy-as-code (Checkov)                 | **Report mode** (ADR-0070 burn-in)       | `ci.yml` → _IaC Security Scan (Checkov)_, findings in the CI job summary; SARIF→Security-tab + blocking after burn-in — DevOps |
 | Cost estimation in PR (Infracost)            | **Wired (gated)**                        | `.github/workflows/infracost.yml` — comments cost delta on TF PRs; gated on `INFRACOST_API_KEY` — DevOps/FinOps (ADR-0020)     |
-| Drift detection (scheduled `terraform plan`) | **Gap**                                  | SRE/DevOps                                                                                                                     |
+| Drift detection (scheduled `terraform plan`) | **Wired (gated)**                        | `.github/workflows/tf-drift.yml` — daily plan per env, fails on drift; gated on `AWS_OIDC_ROLE_ARN` — SRE/DevOps               |
 
-> Recently closed: the api-gateway `securityContext` gap (all service charts now meet the hardened
-> baseline), and the **Checkov** IaC scan (ADR-0029) is now wired in **report mode** (ADR-0070
-> burn-in), the TF **state bootstrap** module (`terraform/bootstrap/`), and the **External Secrets**
-> reference pattern (`k8s/external-secrets/`, ADR-0008), and gated **Infracost** cost estimation
-> (`.github/workflows/infracost.yml`). Remaining gap: **TF drift detection** (scheduled
-> `terraform plan` — needs AWS OIDC credentials to run; tracked for a follow-up).
+> All the gaps surfaced by the Wave 4 IaC review are now closed: api-gateway `securityContext`
+> (hardened baseline across all charts); **Checkov** IaC scan (report mode, ADR-0070); TF **state
+> bootstrap** (`terraform/bootstrap/`); **External Secrets** reference pattern (`k8s/external-secrets/`,
+> ADR-0008); gated **Infracost** cost estimation (`infracost.yml`); and gated **TF drift detection**
+> (`tf-drift.yml`). The gated workflows (Infracost, drift) activate when the org sets their respective
+> secret/variable.
