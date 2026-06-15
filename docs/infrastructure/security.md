@@ -74,14 +74,18 @@ additionally drops all capabilities).
 
 ## 5. Cost estimation (FinOps)
 
-- **Owned gap:** no per-PR cloud-cost estimation. Recommended: **Infracost** in CI to comment the
-  monthly-cost delta of a Terraform change on the PR (ADR-0020 FinOps). **Owner: DevOps/FinOps.**
+- **Wired (gated):** the `Infracost` workflow (`.github/workflows/infracost.yml`) comments the
+  monthly-cost delta of a Terraform change on the PR (ADR-0020 FinOps). It is **gated on the
+  `INFRACOST_API_KEY` secret** — with no key (the un-adopted template) it posts a notice and no-ops;
+  set the secret (free key from infracost.io) to activate. Uses the Infracost CLI (no third-party
+  Action to pin). **Owner: DevOps/FinOps.**
 
 ---
 
 ## Summary
 
-Network isolation and pod hardening are **in place across all service charts**. The remaining
-priority gap is the **Checkov gate** (decided in ADR-0029 but unenforced — Trivy config scan skips
-`infrastructure/terraform`); secrets-via-Vault/External-Secrets and Infracost are also tracked gaps.
+Network isolation and pod hardening are **in place across all service charts**; Checkov IaC scanning
+(report mode), the External Secrets reference pattern, and gated Infracost cost estimation are wired.
+The remaining gap is **TF drift detection** (a scheduled `terraform plan`, which needs AWS OIDC creds
+to run).
 This guide records the standard and each gap so none is silently assumed done.
