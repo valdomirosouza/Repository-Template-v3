@@ -85,7 +85,7 @@ additionally drops all capabilities).
 ## Summary
 
 Network isolation and pod hardening are **in place across all service charts**; Checkov IaC scanning
-(report mode), the External Secrets reference pattern, and gated Infracost cost estimation are wired.
-The remaining gap is **TF drift detection** (a scheduled `terraform plan`, which needs AWS OIDC creds
-to run).
-This guide records the standard and each gap so none is silently assumed done.
+(report mode), the External Secrets reference pattern, gated Infracost cost estimation, and gated TF
+drift detection are all wired. The gated workflows (Infracost, drift) activate when the org provides
+their secret/variable. This guide records the standard and each control so none is silently assumed
+done.

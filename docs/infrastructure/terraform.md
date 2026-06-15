@@ -50,12 +50,14 @@ terraform apply     # staging/production applies are change-managed (ADR-0027, C
 Production applies follow ISO 27001 change management (CLAUDE.md §11) — a reviewed plan attached to
 the RFC, applied in a change window.
 
-## 4. Drift detection (owned gap)
+## 4. Drift detection
 
-There is no scheduled drift check today. Recommended: a scheduled workflow (e.g. nightly) running
-`terraform plan -detailed-exitcode` per environment and alerting on a non-zero (drift) exit, so
-out-of-band console changes are caught. Pair with ADR-0063's reconciliation discipline
-(`terraform state mv`, import) rather than re-creating drifted resources. **Owner: SRE/DevOps.**
+A scheduled workflow (`.github/workflows/tf-drift.yml`) runs `terraform plan -detailed-exitcode` per
+environment (daily + `workflow_dispatch`) and **fails on drift** (plan exit code 2), so out-of-band
+("ClickOps") console changes are caught. It is **gated on the `AWS_OIDC_ROLE_ARN` variable** — with
+no role (the un-adopted template) it posts a notice and skips; set the variable to an IAM role
+assumable via GitHub OIDC to activate. Reconcile drift per ADR-0063 (`terraform state mv`, import),
+not by re-creating drifted resources. **Owner: SRE/DevOps.**
 
 ## 5. Validation in CI (owned gap)
 
