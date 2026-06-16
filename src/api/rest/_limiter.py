@@ -40,4 +40,6 @@ def _get_rate_limit_key(request: Request) -> str:
     return f"ip:{get_remote_address(request)}"
 
 
-limiter = Limiter(key_func=_get_rate_limit_key)
+# headers_enabled adds X-RateLimit-Limit / X-RateLimit-Remaining / X-RateLimit-Reset (and
+# Retry-After on a 429) to rate-limited responses — clients can self-throttle (api-standards.md §7).
+limiter = Limiter(key_func=_get_rate_limit_key, headers_enabled=True)

@@ -31,6 +31,9 @@ slo_ref: docs/sre/slo/slo.yaml # where this feature's SLOs are/were recorded
   • `/deliver specs/<domain>/<this-file>.md` drives the spec through all 15 phases as a
     governed dry-run and emits reports/<slug>/FINAL-REPORT.md. The map below shows which
     section feeds which phase — fill them well and the dry-run has real material to validate.
+  • OPTIONAL: for product-facing / high-risk / AI features, also fill the conditional sections in
+    specs/SPEC-ADDENDUM-product-operational.md (product hypothesis, GTM relevance, rollout/backout,
+    operational failure modes, AI evaluation strategy) and link or inline them before §16.
 -->
 
 ## How `/deliver` reads this spec (section → phase)
