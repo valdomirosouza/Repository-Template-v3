@@ -62,14 +62,35 @@ jobs:
             (cd "$dir" && mvn spotbugs:check)
           done
 
+      # Persist the NVD datastore across runs so dependency-check 9+/12 performs an
+      # *incremental* update instead of a full download each build (a cold cache + the
+      # keyless NVD rate limit otherwise triggers HTTP 429 and corrupts the H2 store).
+      # Keyed on run_id with a stable restore prefix → always restore the newest cache,
+      # save a fresh one each run. setup-java's maven cache can't serve this: it is keyed
+      # on pom hashes, so a dependency bump invalidates the NVD data.
+      - name: Cache NVD database (dependency-check)
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.dependency-check-data
+          key: dependency-check-nvd-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            dependency-check-nvd-${{ runner.os }}-
+
       - name: OWASP Dependency-Check (blocks on CVSS ≥ 7.0)
+        # NVD_API_KEY (optional repo secret) makes NVD updates reliable and fast; without it
+        # the build falls back to the keyless path and leans on the cache above.
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           find services -name pom.xml -not -path '*/target/*' | while read pomfile; do
             dir=$(dirname "$pomfile")
             echo "Dependency-Check: $dir"
             (cd "$dir" && mvn dependency-check:check \
               -Ddependency-check.failBuildOnCVSS=7 \
-              -Ddependency-check.suppressionFile=dependency-check-suppressions.xml)
+              -Ddependency-check.suppressionFile=dependency-check-suppressions.xml \
+              -DdataDirectory="$HOME/.dependency-check-data" \
+              -DnvdApiKeyEnvironmentVariable=NVD_API_KEY \
+              -DnvdApiDelay=6000)
           done
         # Fails the build when any dependency has a CVE with CVSS ≥ 7.0 (HIGH or CRITICAL).
         # False positives must be documented in dependency-check-suppressions.xml with CVE ID and rationale.
