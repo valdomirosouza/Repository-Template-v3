@@ -15,8 +15,10 @@ export default function HITLQueuePage() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    // `loading` initialises to true for the first paint; we intentionally do NOT set it
+    // synchronously here — that would trip react-hooks/set-state-in-effect and flash the
+    // loading state on each 15s background poll.
     try {
-      setLoading(true);
       const data = await client.listPendingRequests();
       setRequests(data);
       setError(null);
@@ -28,6 +30,9 @@ export default function HITLQueuePage() {
   }, []);
 
   useEffect(() => {
+    // `load` is async: every setState runs after `await`, so there is no synchronous
+    // cascading render the rule guards against — this is a standard fetch-on-mount + poll.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     const interval = setInterval(load, 15_000);
     return () => clearInterval(interval);

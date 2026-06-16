@@ -204,3 +204,62 @@ services:
             threshold: 12
             severity: warning
             runbook: docs/sre/runbooks/hitl-queue-backlog.md
+
+  # golden-signals: aggregate burn-rate alerting for the SPEC-LGS-001 service. The canary-gate
+  # thresholds (cd-production.yml, ADR-0073) live in docs/sre/slo/golden-signals.yaml and the 30d/7d
+  # objectives in golden-signals-objectives.yaml — these three MUST stay consistent. Targets below
+  # mirror the objectives file; values marked [CONFIRM] still need SRE-Lead + agent-governance
+  # sign-off before production (SPEC-LGS-001 §10; ADR-0043–0046).
+  - name: golden-signals
+    description: "Log-based Golden Signals ingestion + analytics service (SPEC-LGS-001)"
+    slos:
+      - name: ingestion_availability
+        sli_type: availability
+        description: "POST /ingestion accepts valid batches (non-5xx)"
+        target: 99.9 # [CONFIRM] — mirrors golden-signals-objectives.yaml ingestion-availability
+        window: 30d
+        error_budget_minutes: 43.8
+        alert_burn_rates:
+          - window: 1h
+            burn_rate: 14.4
+            severity: critical
+            runbook: docs/sre/runbooks/RB-SRE-GS-001-store-unavailable.md
+          - window: 6h
+            burn_rate: 6.0
+            severity: warning
+            runbook: docs/sre/runbooks/RB-SRE-GS-001-store-unavailable.md
+
+      - name: analytics_availability
+        sli_type: availability
+        description: "GET /analytics returns non-5xx — agent-facing read path"
+        target: 99.5 # [CONFIRM] — mirrors objectives analytics-availability
+        window: 30d
+        alert_burn_rates:
+          - window: 1h
+            burn_rate: 14.4
+            severity: critical
+            runbook: docs/sre/runbooks/RB-SRE-GS-001-store-unavailable.md
+
+      - name: analytics_latency_p99
+        sli_type: latency
+        description: "99th percentile incident-time read latency for /analytics (NFR-07)"
+        target_ms: 750 # [CONFIRM] — mirrors objectives analytics-latency
+        window: 30d
+        alert_burn_rates:
+          - window: 5m
+            threshold_ms: 1500
+            severity: critical
+          - window: 15m
+            threshold_ms: 1000
+            severity: warning
+
+      - name: aggregate_freshness
+        sli_type: latency
+        description: "Lag from ingestion to queryable aggregate (G-01 — within one window)"
+        target_ms: 90000 # [CONFIRM] — objectives aggregate-freshness 90s; SLI gs_aggregate_freshness_seconds
+        window: 7d
+        alert_burn_rates:
+          - window: 5m
+            threshold_ms: 120000
+            severity: warning
+            runbook: docs/sre/runbooks/RB-SRE-GS-002-freshness-lag.md

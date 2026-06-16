@@ -26,4 +26,25 @@
     <packageUrl regex="true">^pkg:maven/io\.micrometer/micrometer-registry-prometheus@.*$</packageUrl>
     <cve>CVE-2026-42154</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+      FALSE POSITIVE — mis-assigned CPE (verified 2026-06-15; pending Security-Lead confirmation).
+      dependency-check assigns the generic SDK CPE cpe:/a:opentelemetry:opentelemetry to the
+      JAVA artifact io.opentelemetry.semconv:opentelemetry-semconv, so every OpenTelemetry-GO
+      CVE matches this jar via fuzzy CPE matching. The Java semconv jar is GENERATED
+      SEMANTIC-CONVENTION CONSTANTS ONLY (attribute-name strings) — it has no runtime/executable
+      code, no command execution, and no HTTP client, so none of these Go-SDK CVEs can apply.
+      It is pulled transitively via micrometer-tracing-bridge-otel / opentelemetry-exporter-otlp.
+      Confirmed Go-only CVEs currently mis-attributed (all in go.opentelemetry.io/otel, fixed in
+      opentelemetry-go v1.43.0):
+        - CVE-2026-24051 — PATH hijacking / arbitrary code execution (Darwin ioreg, BSD kenv); GHSA-9h8m-3fm2-qjrq
+        - CVE-2026-39882 — OTLP-HTTP exporter unbounded-body DoS / memory exhaustion; GHSA-w8rr-5gcm-pp58
+        - CVE-2026-39883 — BSD/Solaris kenv PATH-hijacking follow-up; GHSA-hfvc-g4fc-pqhx
+      Suppressing the mis-assigned CPE (not per-CVE) so future OpenTelemetry-Go CVEs do not
+      re-trigger against this constants-only Java jar. Scoped to this package + CPE only;
+      genuine Java CVEs (matched by the jar's own maven coordinates) remain unaffected.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io\.opentelemetry\.semconv/opentelemetry-semconv@.*$</packageUrl>
+    <cpe>cpe:/a:opentelemetry:opentelemetry</cpe>
+  </suppress>
 </suppressions>
