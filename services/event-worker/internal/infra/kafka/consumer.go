@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
+
 	"github.com/yourorg/monorepo/services/event-worker/internal/domain"
 	"github.com/yourorg/monorepo/services/event-worker/internal/handler"
 )
