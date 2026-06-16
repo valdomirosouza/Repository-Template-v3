@@ -24,6 +24,8 @@ from slowapi.middleware import SlowAPIMiddleware
 from src.agents.hitl_gateway import HITLGateway
 from src.agents.hitl_store import HITLRedisStore, InMemoryHITLStore
 from src.api.rest._limiter import limiter
+from src.api.rest.correlation import install_correlation
+from src.api.rest.errors import install_error_handlers
 from src.api.rest.routers import health, hitl, requests
 from src.api.rest.security_headers import SecurityHeadersMiddleware
 from src.guardrails.audit_logger import AuditLogger, InMemoryAuditStorage, PostgresAuditStorage
@@ -120,6 +122,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     else:
         app.state.request_store = InMemoryRequestStore()
 
+    # Idempotency store for retryable POSTs — Redis-backed when available; in-memory fallback for
+    # local dev (api-standards.md §6).
+    from src.api.rest.idempotency import InMemoryIdempotencyStore, RedisIdempotencyStore
+
+    if app.state.redis is not None:
+        app.state.idempotency_store = RedisIdempotencyStore(client=app.state.redis)
+    else:
+        app.state.idempotency_store = InMemoryIdempotencyStore()
+
     # HITL gateway — Redis-backed when available; in-memory fallback for local dev.
     # Production pods must always have Redis available (see RB-003-hitl-recovery.md).
     # Payloads are AES-256-GCM encrypted at rest when db_encryption_enabled=True (ADR-0019).
@@ -203,6 +214,15 @@ app.add_middleware(
 # Security headers on every response (X-Content-Type-Options, X-Frame-Options,
 # CSP, Referrer-Policy, Permissions-Policy; HSTS in production only).
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Correlation id — added LAST so it is the outermost middleware: every response (including
+# error responses) carries X-Request-Id, and request.state.request_id/trace_id are available to
+# the error handlers below (docs/api/api-standards.md §3).
+install_correlation(app)
+
+# Structured error model: typed DomainError + raised HTTPException are rendered as a superset of
+# {"detail": ...} with type/title/status/instance/request_id/trace_id (docs/api/error-model.md).
+install_error_handlers(app)
 
 # Prometheus metrics scrape endpoint — required for Golden Signals alert rules
 app.mount("/metrics", make_asgi_app())
