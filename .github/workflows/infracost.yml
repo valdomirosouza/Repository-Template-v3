@@ -1,0 +1,59 @@
+# Infracost — per-PR cloud cost estimate for Terraform changes (ADR-0020 FinOps).
+#
+# GATED on the INFRACOST_API_KEY secret: with no key (e.g. the un-adopted template) the job posts a
+# notice and no-ops, so it never fails CI. Set the secret (a free key from https://www.infracost.io/)
+# to activate — it then comments the monthly-cost delta of a Terraform change on the PR.
+#
+# Uses the Infracost CLI via its official install script (no third-party Action to SHA-pin).
+name: Infracost
+
+on:
+  pull_request:
+    paths:
+      - "infrastructure/terraform/**"
+
+permissions:
+  contents: read
+  pull-requests: write # post/update the cost comment
+
+jobs:
+  cost-estimate:
+    name: Cost estimate (Terraform)
+    runs-on: ubuntu-latest
+    env:
+      INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Production is the cost-representative environment; adjust per need.
+      TF_PATH: infrastructure/terraform/environments/production
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Check Infracost configuration
+        id: cfg
+        run: |
+          if [ -z "${INFRACOST_API_KEY}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Infracost not configured — set the INFRACOST_API_KEY secret to enable per-PR cost estimates (ADR-0020). Skipping."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Infracost CLI
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
+
+      - name: Generate cost breakdown
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          infracost breakdown --path "${TF_PATH}" \
+            --format json --out-file /tmp/infracost.json
+
+      - name: Post cost comment on the PR
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          infracost comment github --path /tmp/infracost.json \
+            --repo "${GITHUB_REPOSITORY}" \
+            --github-token "${GITHUB_TOKEN}" \
+            --pull-request "${{ github.event.pull_request.number }}" \
+            --behavior update

@@ -27,12 +27,22 @@ Proposed → Accepted → Deprecated → Superseded
 
 ## ADR Template
 
+Copy the full template to start a new ADR, and run the review checklist before marking it `Accepted`:
+
+- **Template:** [`ADR-TEMPLATE.md`](ADR-TEMPLATE.md) — includes lifecycle status, review-by date for
+  temporary decisions, consequence tracking, supersession links, and a service/risk mapping.
+- **Review checklist:** [`adr-review-checklist.md`](adr-review-checklist.md) — a non-author reviewer
+  works through this at the Phase 5 (Architecture) gate.
+
+The skeleton (kept here for quick reference):
+
 ```markdown
 # ADR-NNNN — Title
 
 **Status:** Proposed | Accepted | Deprecated | Superseded by ADR-NNNN
 **Date:** YYYY-MM-DD
 **Authors:** Name(s)
+**Review-by:** YYYY-MM-DD or `permanent` (required for Proposed/temporary decisions)
 
 ## Context
 

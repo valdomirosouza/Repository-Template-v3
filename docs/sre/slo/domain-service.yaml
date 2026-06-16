@@ -1,0 +1,22 @@
+# Per-service SLO — domain-service (ADR-0073).
+#
+# The `canary` block is read at runtime by cd-production.yml (via yq) at the 5% / 25% promotion
+# steps and the error-budget gate. NO canary threshold may be hard-coded in workflow YAML — that
+# is enforced by scripts/governance/check_slo_thresholds.py. A deployed service WITHOUT this file
+# fails the pipeline (no silent default).
+#
+# Schema: schema/service-slo.schema.json.
+#
+# [CONFIRM] — these canary thresholds are conservative template defaults (mirroring api-gateway).
+# They require SRE-Lead sign-off and tuning against domain-service's own 30d objectives before this
+# service is promoted to production via canary. See docs/governance/traceability-matrix.md.
+
+service: domain-service
+
+canary:
+  # Fail canary promotion if the observed 5xx error ratio exceeds this (fraction of requests).
+  error_rate_max: 0.01 # [CONFIRM]
+  # Fail canary promotion if the observed p99 request latency exceeds this (seconds).
+  p99_latency_seconds_max: 0.5 # [CONFIRM]
+  # Block promotion if the remaining error budget is at or below this ratio (burn-aware gate).
+  error_budget_min_ratio: 0.10 # [CONFIRM]

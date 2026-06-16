@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { ApprovalCard } from "@/components/hitl/ApprovalCard";
+import { ApprovalCard, riskBand } from "@/components/hitl/ApprovalCard";
 import { type HITLRequestSummary, HITLRequestSummaryStatusEnum } from "@/lib/api";
 
 const mockRequest: HITLRequestSummary = {
@@ -18,6 +18,20 @@ describe("ApprovalCard", () => {
     render(<ApprovalCard request={mockRequest} onDecision={jest.fn()} />);
     expect(screen.getByText("write_file")).toBeInTheDocument();
     expect(screen.getByText(/risk 60%/)).toBeInTheDocument();
+  });
+
+  it("shows the risk band and a masked-preview label", () => {
+    render(<ApprovalCard request={mockRequest} onDecision={jest.fn()} />);
+    expect(screen.getByText(/Medium · risk 60%/)).toBeInTheDocument();
+    expect(screen.getByText(/Why this risk level\?/)).toBeInTheDocument();
+    expect(screen.getByText(/PII-masked preview/)).toBeInTheDocument();
+  });
+
+  it("classifies risk bands around the 0.70 human-review threshold", () => {
+    expect(riskBand(0.2).label).toBe("Low");
+    expect(riskBand(0.55).label).toBe("Medium");
+    expect(riskBand(0.7).label).toBe("High"); // at the threshold = high
+    expect(riskBand(0.95).label).toBe("High");
   });
 
   it("disables buttons when rationale is empty", () => {
