@@ -189,9 +189,12 @@ run-go: ## Go: start service with air hot-reload (SERVICE=<name>)
 	air -c services/$(SERVICE)/.air.toml
 
 gen-proto-go: ## Go: regenerate gRPC stubs from proto files into api/grpc/
+	# `module=` (not paths=source_relative) so output honours each proto's `option go_package`
+	# (github.com/yourorg/monorepo/api/grpc/...) and lands under api/grpc/<pkg>/ — keeping the
+	# generated stubs in sync with the `git diff --exit-code api/` drift gate in ci-go.yml.
 	find docs/api/grpc/proto -name "*.proto" | xargs \
-		protoc --go_out=. --go_opt=paths=source_relative \
-		       --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		protoc --go_out=. --go_opt=module=github.com/yourorg/monorepo \
+		       --go-grpc_out=. --go-grpc_opt=module=github.com/yourorg/monorepo \
 		       -I docs/api/grpc/proto
 
 gen-proto-python: ## Python: regenerate gRPC stubs from proto files into src/shared/generated/grpc/
