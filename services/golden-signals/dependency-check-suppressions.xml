@@ -28,19 +28,23 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-      FALSE POSITIVE (verified 2026-06-15; pending Security-Lead confirmation).
-      CVE-2026-39883 is a PATH-hijacking / untrusted-search-path flaw (CWE-426) in the
-      OpenTelemetry-GO SDK's BSD `kenv` command execution — the Go module
-      go.opentelemetry.io/otel, fixed in opentelemetry-go v1.43.0 (ref: GHSA-hfvc-g4fc-pqhx,
-      nvd.nist.gov/vuln/detail/CVE-2026-39883). This service depends on the JAVA artifact
-      io.opentelemetry.semconv:opentelemetry-semconv (semantic-convention constants only —
-      pulled transitively via micrometer-tracing-bridge-otel / opentelemetry-exporter-otlp).
-      It contains NO Go code and none of the affected kenv/exec path-resolution logic.
-      dependency-check mis-attributes the Go-SDK CVE to the similarly-named Java jar via fuzzy
-      CPE matching; no opentelemetry-semconv (Java) release will ever "fix" a Go-SDK CVE.
-      Scoped to this package + CVE only.
+      FALSE POSITIVE — mis-assigned CPE (verified 2026-06-15; pending Security-Lead confirmation).
+      dependency-check assigns the generic SDK CPE cpe:/a:opentelemetry:opentelemetry to the
+      JAVA artifact io.opentelemetry.semconv:opentelemetry-semconv, so every OpenTelemetry-GO
+      CVE matches this jar via fuzzy CPE matching. The Java semconv jar is GENERATED
+      SEMANTIC-CONVENTION CONSTANTS ONLY (attribute-name strings) — it has no runtime/executable
+      code, no command execution, and no HTTP client, so none of these Go-SDK CVEs can apply.
+      It is pulled transitively via micrometer-tracing-bridge-otel / opentelemetry-exporter-otlp.
+      Confirmed Go-only CVEs currently mis-attributed (all in go.opentelemetry.io/otel, fixed in
+      opentelemetry-go v1.43.0):
+        - CVE-2026-24051 — PATH hijacking / arbitrary code execution (Darwin ioreg, BSD kenv); GHSA-9h8m-3fm2-qjrq
+        - CVE-2026-39882 — OTLP-HTTP exporter unbounded-body DoS / memory exhaustion; GHSA-w8rr-5gcm-pp58
+        - CVE-2026-39883 — BSD/Solaris kenv PATH-hijacking follow-up; GHSA-hfvc-g4fc-pqhx
+      Suppressing the mis-assigned CPE (not per-CVE) so future OpenTelemetry-Go CVEs do not
+      re-trigger against this constants-only Java jar. Scoped to this package + CPE only;
+      genuine Java CVEs (matched by the jar's own maven coordinates) remain unaffected.
     ]]></notes>
     <packageUrl regex="true">^pkg:maven/io\.opentelemetry\.semconv/opentelemetry-semconv@.*$</packageUrl>
-    <cve>CVE-2026-39883</cve>
+    <cpe>cpe:/a:opentelemetry:opentelemetry</cpe>
   </suppress>
 </suppressions>
