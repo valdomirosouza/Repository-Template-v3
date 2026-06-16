@@ -1,0 +1,24 @@
+# Per-service CANARY SLO — golden-signals (ADR-0073; SPEC-LGS-001).
+#
+# The `canary` block is read at runtime by cd-production.yml (via yq) at the 5% / 25% promotion
+# steps and the error-budget gate. NO canary threshold may be hard-coded in workflow YAML — that
+# is enforced by scripts/governance/check_slo_thresholds.py. A deployed service WITHOUT this file
+# fails the pipeline (no silent default).
+#
+# Schema: schema/service-slo.schema.json. The long-term 30d/7d objectives for this service (and the
+# FR-13 HITL-flip triggers) live in the sibling file golden-signals-objectives.yaml — keep the two
+# consistent.
+#
+# [CONFIRM] — canary thresholds derived from the objectives file: analytics-latency objective is
+# 750 ms p99 (NFR-07) and ingestion-availability is 99.9%; canary is set intentionally more
+# permissive during rollout. Requires SRE-Lead + agent-governance sign-off before production canary.
+
+service: golden-signals
+
+canary:
+  # Fail canary promotion if the observed 5xx error ratio exceeds this (fraction of requests).
+  error_rate_max: 0.01 # [CONFIRM] — looser than the 99.9% ingestion objective during rollout
+  # Fail canary promotion if the observed p99 request latency exceeds this (seconds).
+  p99_latency_seconds_max: 0.75 # [CONFIRM] — analytics-latency objective (NFR-07)
+  # Block promotion if the remaining error budget is at or below this ratio (burn-aware gate).
+  error_budget_min_ratio: 0.10 # [CONFIRM]

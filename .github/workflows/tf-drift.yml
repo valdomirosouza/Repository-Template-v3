@@ -1,0 +1,78 @@
+# Terraform drift detection — scheduled `terraform plan` per environment.
+#
+# Catches out-of-band ("ClickOps") changes that diverge from the committed Terraform. Reconcile drift
+# via ADR-0063 (terraform state mv / import), not by re-creating resources.
+#
+# GATED on the `AWS_OIDC_ROLE_ARN` repo/environment variable: with no role (the un-adopted template)
+# each step is skipped and the job posts a notice — it never fails on a fresh clone. Set the variable
+# to an IAM role ARN (assumed via GitHub OIDC) to activate.
+name: Terraform Drift Detection
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # GitHub OIDC → AWS AssumeRoleWithWebIdentity
+
+jobs:
+  drift:
+    name: Drift (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [staging, production]
+    env:
+      AWS_ROLE_ARN: ${{ vars.AWS_OIDC_ROLE_ARN }}
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      TF_DIR: infrastructure/terraform/environments/${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Check drift-detection configuration
+        id: cfg
+        run: |
+          if [ -z "${AWS_ROLE_ARN}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Drift detection not configured — set the AWS_OIDC_ROLE_ARN variable (an IAM role assumable via GitHub OIDC) to enable scheduled 'terraform plan'. Skipping ${{ matrix.env }}."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure AWS credentials (OIDC)
+        if: steps.cfg.outputs.configured == 'true'
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        if: steps.cfg.outputs.configured == 'true'
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_wrapper: false
+
+      - name: terraform init
+        if: steps.cfg.outputs.configured == 'true'
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init -input=false
+
+      - name: terraform plan (detect drift)
+        if: steps.cfg.outputs.configured == 'true'
+        working-directory: ${{ env.TF_DIR }}
+        # -detailed-exitcode: 0 = no changes, 2 = drift (changes), 1 = error.
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -lock=false -input=false -no-color
+          code=$?
+          if [ "$code" = "2" ]; then
+            echo "::error::Drift detected in ${{ matrix.env }} — the live infrastructure differs from committed Terraform. Reconcile per ADR-0063."
+            exit 1
+          elif [ "$code" = "1" ]; then
+            echo "::error::terraform plan failed for ${{ matrix.env }}."
+            exit 1
+          fi
+          echo "No drift in ${{ matrix.env }}."

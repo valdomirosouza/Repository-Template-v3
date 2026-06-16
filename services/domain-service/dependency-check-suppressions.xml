@@ -43,19 +43,24 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-      LIKELY FALSE POSITIVE (CPE fuzzy match — PENDING Security-Lead confirmation).
-      CVE-2026-39883 (CVSS 7.0) and CVE-2026-39882 are attributed by dependency-check to
-      io.opentelemetry.semconv:opentelemetry-semconv via the broad product CPE
-      cpe:2.3:a:opentelemetry:opentelemetry. opentelemetry-semconv is a CONSTANTS-ONLY
-      artifact — generated semantic-convention attribute keys (e.g. "http.request.method"),
-      with no runtime, network, parsing, or deserialization code — so it has no exploitable
-      surface for a CVSS-7 vulnerability; this is the same fuzzy-CPE mis-attribution pattern
-      as the micrometer/angus entries above. It is pulled transitively by
-      micrometer-tracing-bridge-otel (Spring-Boot-BOM-managed). Scoped to this package + these
-      CVEs only. ACTION: Security Lead to verify the CVE details against NVD and confirm/revoke.
+      FALSE POSITIVE — mis-assigned CPE (PENDING Security-Lead confirmation).
+      dependency-check assigns the broad SDK CPE cpe:/a:opentelemetry:opentelemetry to the
+      JAVA artifact io.opentelemetry.semconv:opentelemetry-semconv (pulled transitively by
+      micrometer-tracing-bridge-otel, Spring-Boot-BOM-managed), so every OpenTelemetry-GO CVE
+      matches it. opentelemetry-semconv is a CONSTANTS-ONLY artifact — generated
+      semantic-convention attribute keys (e.g. "http.request.method"), no runtime, network,
+      command-exec, parsing, or deserialization code — so none of these Go-SDK CVEs apply.
+      Confirmed Go-only CVEs currently mis-attributed (all in go.opentelemetry.io/otel, fixed
+      in opentelemetry-go v1.43.0):
+        - CVE-2026-24051 — PATH hijacking / arbitrary code execution (Darwin ioreg, BSD kenv); GHSA-9h8m-3fm2-qjrq
+        - CVE-2026-39882 — OTLP-HTTP exporter unbounded-body DoS / memory exhaustion; GHSA-w8rr-5gcm-pp58
+        - CVE-2026-39883 — BSD/Solaris kenv PATH-hijacking follow-up; GHSA-hfvc-g4fc-pqhx
+      Suppressing the mis-assigned CPE (not per-CVE) so newly-disclosed OTel-Go CVEs — e.g.
+      CVE-2026-24051, which slipped past the previous per-CVE list — do not re-trigger against
+      this constants-only jar. Same fuzzy-CPE pattern as the micrometer/angus entries above.
+      Scoped to this package + CPE only; genuine Java CVEs remain unaffected.
     ]]></notes>
     <packageUrl regex="true">^pkg:maven/io\.opentelemetry\.semconv/opentelemetry-semconv@.*$</packageUrl>
-    <cve>CVE-2026-39883</cve>
-    <cve>CVE-2026-39882</cve>
+    <cpe>cpe:/a:opentelemetry:opentelemetry</cpe>
   </suppress>
 </suppressions>
