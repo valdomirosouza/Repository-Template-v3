@@ -12,6 +12,67 @@ All notable changes to this project will be documented in this file, which adher
 
 ---
 
+## [2.15.0](https://github.com/valdomirosouza/Repository-Template-v3/compare/v2.14.5...v2.15.0) (2026-06-16)
+
+
+### Features
+
+* **api:** rate-limit headers, cursor pagination, idempotency keys ([#28](https://github.com/valdomirosouza/Repository-Template-v3/issues/28)) ([7a32167](https://github.com/valdomirosouza/Repository-Template-v3/commit/7a32167494059d6ba9a654eeea380b4dd30db591)), closes [#27](https://github.com/valdomirosouza/Repository-Template-v3/issues/27)
+* **api:** request correlation IDs + structured error model ([#26](https://github.com/valdomirosouza/Repository-Template-v3/issues/26)) ([1ac52b8](https://github.com/valdomirosouza/Repository-Template-v3/commit/1ac52b8e56b00c61ca868371c56769a2e07a1c1a))
+* **data:** migration/ERD docs, Redis key-naming standard, TTL tests, backup scripts ([#30](https://github.com/valdomirosouza/Repository-Template-v3/issues/30)) ([410bd2b](https://github.com/valdomirosouza/Repository-Template-v3/commit/410bd2bea90cedfa0762103c47c3cd37955587b2)), closes [#29](https://github.com/valdomirosouza/Repository-Template-v3/issues/29)
+* **frontend:** HITL console mock mode, risk-band explanation, approval E2E ([#34](https://github.com/valdomirosouza/Repository-Template-v3/issues/34)) ([527eb90](https://github.com/valdomirosouza/Repository-Template-v3/commit/527eb9036f93f2831f3c2dd32e5cdf62d9db4fda))
+* **golden-signals:** wire OTel distributed spans + aggregate SLO block ([#63](https://github.com/valdomirosouza/Repository-Template-v3/issues/63)) ([a9f3dee](https://github.com/valdomirosouza/Repository-Template-v3/commit/a9f3deeccc0570e92aeedf1bca2eb87a39baa3b6))
+* **governance:** add repository traceability gates ([#18](https://github.com/valdomirosouza/Repository-Template-v3/issues/18)) ([2c4dff9](https://github.com/valdomirosouza/Repository-Template-v3/commit/2c4dff908c74479b42b8d009e05f56b350687821))
+* **infra:** add Terraform state backend bootstrap module ([#40](https://github.com/valdomirosouza/Repository-Template-v3/issues/40)) ([7b4aa76](https://github.com/valdomirosouza/Repository-Template-v3/commit/7b4aa766b730d1371be1745c45b0d0470e7239be)), closes [#39](https://github.com/valdomirosouza/Repository-Template-v3/issues/39)
+* **infra:** External Secrets reference manifests (ADR-0008 pattern) ([#44](https://github.com/valdomirosouza/Repository-Template-v3/issues/44)) ([97e970f](https://github.com/valdomirosouza/Repository-Template-v3/commit/97e970f0efccc7019e80bf12d203c66f16beb103)), closes [#43](https://github.com/valdomirosouza/Repository-Template-v3/issues/43)
+
+
+### Bug Fixes
+
+* **infra:** harden api-gateway pod with securityContext ([#36](https://github.com/valdomirosouza/Repository-Template-v3/issues/36)) ([8047f12](https://github.com/valdomirosouza/Repository-Template-v3/commit/8047f12b1767a2b109eb78526613d1599d3ca633)), closes [#35](https://github.com/valdomirosouza/Repository-Template-v3/issues/35)
+
+
+### Security
+
+* **domain-service:** suppress mis-assigned opentelemetry CPE on semconv jar ([#68](https://github.com/valdomirosouza/Repository-Template-v3/issues/68)) ([099409a](https://github.com/valdomirosouza/Repository-Template-v3/commit/099409a5014c87f089f708000f2db2d563a51b4d)), closes [#67](https://github.com/valdomirosouza/Repository-Template-v3/issues/67)
+
+
+### CI/CD
+
+* **devsecops:** Checkov report mode writes to job summary, no SARIF upload ([#42](https://github.com/valdomirosouza/Repository-Template-v3/issues/42)) ([157a5eb](https://github.com/valdomirosouza/Repository-Template-v3/commit/157a5ebf32e5ffc6911947dacaeda09afa031054)), closes [#41](https://github.com/valdomirosouza/Repository-Template-v3/issues/41)
+* **devsecops:** wire Checkov IaC scan (report mode, ADR-0029) ([#38](https://github.com/valdomirosouza/Repository-Template-v3/issues/38)) ([77812fc](https://github.com/valdomirosouza/Repository-Template-v3/commit/77812fcebdd51bbb31ae570c63eba3983018c4bc))
+* **finops:** wire gated Infracost per-PR cost estimate (ADR-0020) ([#46](https://github.com/valdomirosouza/Repository-Template-v3/issues/46)) ([3fdf2e3](https://github.com/valdomirosouza/Repository-Template-v3/commit/3fdf2e33c9f9b171484750e4e558adb9b96dafe0)), closes [#45](https://github.com/valdomirosouza/Repository-Template-v3/issues/45)
+* **go:** fix proto-stub drift gate — generate to api/grpc and ignore tool-version stamps ([#64](https://github.com/valdomirosouza/Repository-Template-v3/issues/64)) ([cd61bde](https://github.com/valdomirosouza/Repository-Template-v3/commit/cd61bde8919359b3925256e2dd6dfde93dc3b76f)), closes [#59](https://github.com/valdomirosouza/Repository-Template-v3/issues/59)
+* **sre:** wire gated Terraform drift detection (scheduled plan) ([#48](https://github.com/valdomirosouza/Repository-Template-v3/issues/48)) ([08d1527](https://github.com/valdomirosouza/Repository-Template-v3/commit/08d1527cb67cf51e1d5f3d0ea0332f07435ec69c)), closes [#47](https://github.com/valdomirosouza/Repository-Template-v3/issues/47)
+
+
+### Build & Dependencies
+
+* **deps-dev:** Bump the maven-minor-patch group across 1 directory with 3 updates ([#2](https://github.com/valdomirosouza/Repository-Template-v3/issues/2)) ([076fd44](https://github.com/valdomirosouza/Repository-Template-v3/commit/076fd44dca1170b4ee60305432177b3ac98010c5))
+* **deps:** Bump actions/upload-artifact from 4.6.2 to 7.0.1 ([#14](https://github.com/valdomirosouza/Repository-Template-v3/issues/14)) ([3f2ba87](https://github.com/valdomirosouza/Repository-Template-v3/commit/3f2ba87c90cb60ac172dff67c49d4b7436a37aa7))
+* **deps:** bump cryptography&gt;=48.0.1 and add starlette&gt;=1.3.1 floor ([#66](https://github.com/valdomirosouza/Repository-Template-v3/issues/66)) ([edf3dcf](https://github.com/valdomirosouza/Repository-Template-v3/commit/edf3dcf6c0e4cb91ea25d12c552fafeb1446d843)), closes [#65](https://github.com/valdomirosouza/Repository-Template-v3/issues/65)
+* **deps:** bump jest from 29.7.0 to 30.4.2 in frontend ([#12](https://github.com/valdomirosouza/Repository-Template-v3/issues/12)) ([a32e026](https://github.com/valdomirosouza/Repository-Template-v3/commit/a32e026a48b6659a435e78a5b264842556eef1f8))
+* **deps:** bump node from 22-alpine to 26-alpine in frontend ([#8](https://github.com/valdomirosouza/Repository-Template-v3/issues/8)) ([61c7442](https://github.com/valdomirosouza/Repository-Template-v3/commit/61c74427f805e81e0160cb232e868bc643e3af2b))
+* **deps:** bump spring-boot-starter-parent from 3.5.15 to 4.1.0 in domain-service ([#5](https://github.com/valdomirosouza/Repository-Template-v3/issues/5)) ([729ce3a](https://github.com/valdomirosouza/Repository-Template-v3/commit/729ce3a913ea34550bb35e63a60dec4e15064d7c))
+* **deps:** bump testcontainers-bom from 1.20.3 to 2.0.5 in domain-service ([#3](https://github.com/valdomirosouza/Repository-Template-v3/issues/3)) ([1a4e89e](https://github.com/valdomirosouza/Repository-Template-v3/commit/1a4e89e94b1937e2e1c1a6791a1619edbb21d326))
+* **deps:** Bump the actions-minor-patch group across 1 directory with 2 updates ([#13](https://github.com/valdomirosouza/Repository-Template-v3/issues/13)) ([3e1037a](https://github.com/valdomirosouza/Repository-Template-v3/commit/3e1037a8ff085025d012bb421948093b338ccd50))
+* **deps:** Bump the docker-minor-patch group across 2 directories with 2 updates ([#6](https://github.com/valdomirosouza/Repository-Template-v3/issues/6)) ([b99d7e1](https://github.com/valdomirosouza/Repository-Template-v3/commit/b99d7e129b044835263c30c168af280760633a72))
+* **deps:** Bump the go-minor-patch group across 1 directory with 2 updates ([#1](https://github.com/valdomirosouza/Repository-Template-v3/issues/1)) ([c8d27ce](https://github.com/valdomirosouza/Repository-Template-v3/commit/c8d27ce1d3787669520aa7593e919b0994a6ea0a))
+* **deps:** bump typescript from 5.9.3 to 6.0.3 in frontend ([#7](https://github.com/valdomirosouza/Repository-Template-v3/issues/7)) ([2da5c37](https://github.com/valdomirosouza/Repository-Template-v3/commit/2da5c372ae6f00acaf8bfd31654d3dfbef14ce9a))
+* **event-worker:** commit go.sum to fix Go lint/build in CI ([#58](https://github.com/valdomirosouza/Repository-Template-v3/issues/58)) ([31fb9c5](https://github.com/valdomirosouza/Repository-Template-v3/commit/31fb9c5195e77ccb99b2d0741d333e19fb4a082e))
+* **make:** pass --extra dev to Python uv run targets ([#61](https://github.com/valdomirosouza/Repository-Template-v3/issues/61)) ([bfd8077](https://github.com/valdomirosouza/Repository-Template-v3/commit/bfd8077c6d8b9f1521f9f84bc45af4aaf8f71b97)), closes [#60](https://github.com/valdomirosouza/Repository-Template-v3/issues/60)
+
+
+### Documentation
+
+* **ai-governance:** prompt registry, model lifecycle, eval, RAG, memory (Wave 11) ([#54](https://github.com/valdomirosouza/Repository-Template-v3/issues/54)) ([a6ef4fc](https://github.com/valdomirosouza/Repository-Template-v3/commit/a6ef4fccfe20e4b9e135978753fad07e528781a1)), closes [#53](https://github.com/valdomirosouza/Repository-Template-v3/issues/53)
+* **governance:** add RBAC matrix and release evidence package ([#50](https://github.com/valdomirosouza/Repository-Template-v3/issues/50)) ([b6705a8](https://github.com/valdomirosouza/Repository-Template-v3/commit/b6705a87ddafe5873b4bf093d63b313ec3e20949)), closes [#49](https://github.com/valdomirosouza/Repository-Template-v3/issues/49)
+* **infra:** IaC operations & hardening guide ([#32](https://github.com/valdomirosouza/Repository-Template-v3/issues/32)) ([33f7a84](https://github.com/valdomirosouza/Repository-Template-v3/commit/33f7a84a6f082765d817db7417004677e1e1fb8e)), closes [#31](https://github.com/valdomirosouza/Repository-Template-v3/issues/31)
+* **product:** add product discovery and GTM templates ([#19](https://github.com/valdomirosouza/Repository-Template-v3/issues/19)) ([4038be2](https://github.com/valdomirosouza/Repository-Template-v3/commit/4038be2538b4c592580b98056eb319d818682e6b))
+* **resilience:** DR plan, backup/restore policy, chaos catalog (Wave 9) ([#52](https://github.com/valdomirosouza/Repository-Template-v3/issues/52)) ([1377d8e](https://github.com/valdomirosouza/Repository-Template-v3/commit/1377d8e3825fb225475127083a0601f961384385)), closes [#51](https://github.com/valdomirosouza/Repository-Template-v3/issues/51)
+* **spec:** add ADR template, API standards, error model, data catalog ([#20](https://github.com/valdomirosouza/Repository-Template-v3/issues/20)) ([67c4a1e](https://github.com/valdomirosouza/Repository-Template-v3/commit/67c4a1eb56092926c6c036cdb079c9bd8d04e44e))
+* **sre:** structured logging schema contract (Wave 8) ([#56](https://github.com/valdomirosouza/Repository-Template-v3/issues/56)) ([3b9ced5](https://github.com/valdomirosouza/Repository-Template-v3/commit/3b9ced5d29009b2876b78ad1c8d8bb2967d1204b)), closes [#55](https://github.com/valdomirosouza/Repository-Template-v3/issues/55)
+
 ## [2.14.5](https://github.com/valdomirosouza/Repository-Template-v2/compare/v2.14.4...v2.14.5) (2026-06-11)
 
 
