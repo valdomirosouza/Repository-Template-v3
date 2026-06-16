@@ -3,8 +3,11 @@ RUN corepack enable && corepack prepare pnpm@9 --activate
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# The pnpm lockfile is gitignored by template policy (.gitignore), and CI installs with
+# --no-frozen-lockfile; the image build matches that policy (a committed lockfile would be the
+# stricter, more reproducible alternative — see frontend/frontend/README.md).
+COPY package.json ./
+RUN pnpm install --no-frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app

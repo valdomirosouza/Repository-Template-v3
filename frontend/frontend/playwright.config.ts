@@ -12,11 +12,13 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "pnpm dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: true,
-      },
+  // Start the app in HITL mock mode (no backend / no operator JWT) so the E2E approval journey runs
+  // standalone in CI and locally. reuseExistingServer locally lets devs reuse a running dev server.
+  webServer: {
+    command: "pnpm dev",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+    env: { NEXT_PUBLIC_HITL_MOCK: "1" },
+  },
 });

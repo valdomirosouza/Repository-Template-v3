@@ -13,11 +13,12 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 
 from src.agents.request_store import RequestState, RequestStoreProtocol
 from src.api.rest._limiter import limiter
+from src.api.rest.idempotency import IdempotencyStore, make_key
 from src.guardrails.pii_filter import mask_dict
 from src.observability.logger import get_logger
 from src.observability.metrics import AGENT_SEMAPHORE_WAITING
@@ -90,6 +91,7 @@ def get_event_broker(request: Request) -> EventBrokerProtocol:
 @limiter.limit(f"{settings.rate_limit_requests_per_minute}/minute")
 async def submit_request(
     request: Request,
+    response: Response,  # required by slowapi headers_enabled to inject X-RateLimit-* headers
     body: RequestIn,
     store: RequestStoreProtocol = Depends(get_request_store),
     broker: EventBrokerProtocol = Depends(get_event_broker),
@@ -99,7 +101,18 @@ async def submit_request(
     Returns 202 Accepted immediately. Poll GET /v1/requests/{id} for the result.
     PII in the request text is masked before the event is published.
     Returns 503 with Retry-After header when all agent slots are occupied.
+    An ``Idempotency-Key`` header makes retries safe (api-standards.md §6).
     """
+    # Idempotency replay: with a client key AND a wired store, return the cached response without
+    # re-running side effects. No header or no store → behaviour is unchanged (backward-compatible).
+    idem_key = request.headers.get("Idempotency-Key")
+    idem_store: IdempotencyStore | None = getattr(request.app.state, "idempotency_store", None)
+    idem_cache_key = make_key("POST:/v1/requests", idem_key) if idem_key else None
+    if idem_cache_key and idem_store is not None:
+        cached = await idem_store.get(idem_cache_key)
+        if cached is not None:
+            return RequestOut.model_validate_json(cached)
+
     sem: Any = getattr(request.app.state, "agent_semaphore", None)
     if sem is not None and sem._value == 0:
         AGENT_SEMAPHORE_WAITING.labels(settings.service_name).inc()
@@ -137,12 +150,17 @@ async def submit_request(
         priority=body.priority,
     )
 
-    return RequestOut(
+    result = RequestOut(
         request_id=request_id,
         status="queued",
         created_at=now,
         message=f"Request accepted. Poll /v1/requests/{request_id} for status.",
     )
+    # Cache the response so an identical retry (same Idempotency-Key) replays it without
+    # re-publishing the event or re-writing state.
+    if idem_cache_key and idem_store is not None:
+        await idem_store.set(idem_cache_key, result.model_dump_json())
+    return result
 
 
 @router.get(
