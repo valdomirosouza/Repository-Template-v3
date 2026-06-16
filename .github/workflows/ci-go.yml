@@ -79,9 +79,14 @@ jobs:
           sudo apt-get install -y protobuf-compiler
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-          # Regenerate and check for diff
+          # Regenerate and check for diff. -I'protoc' ignores the generated header's tool-version
+          # comment lines (// protoc vX / // protoc-gen-go vY) so the gate is reproducible across
+          # protoc/plugin versions (CI's apt protoc differs from a dev's) and only fails on real
+          # contract drift. --stat avoids the "ambiguous argument" fatal when api/ is absent.
           make gen-proto-go
-          git diff --exit-code api/ || (echo "::error::Generated gRPC stubs are out of date. Run 'make gen-proto-go' and commit." && exit 1)
+          git add -A api/
+          git diff --cached --exit-code -I'protoc' -- api/ \
+            || (echo "::error::Generated gRPC stubs are out of date. Run 'make gen-proto-go' and commit." && exit 1)
 
   test-go-unit:
     name: Go Unit Tests
