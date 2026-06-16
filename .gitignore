@@ -88,3 +88,6 @@ services/**/target/
 # OpenAPI-generator npx wrapper artifacts at repo root (the generator config is openapitools.json)
 /package.json
 /package-lock.json
+
+# Local DB/Redis backups (infrastructure/scripts/db/backup.sh)
+backups/
