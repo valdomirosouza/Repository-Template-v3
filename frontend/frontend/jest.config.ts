@@ -3,7 +3,9 @@ import type { Config } from "jest";
 const config: Config = {
   testEnvironment: "jsdom",
   transform: {
-    "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: { jsx: "react-jsx" } }],
+    // rootDir is set explicitly: TypeScript 6 errors (TS5011) when ts-jest compiles a
+    // single test file and must infer the common source directory.
+    "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: { jsx: "react-jsx", rootDir: "." } }],
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
