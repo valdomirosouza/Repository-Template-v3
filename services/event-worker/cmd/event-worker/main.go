@@ -9,8 +9,10 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/yourorg/monorepo/services/event-worker/internal/config"
 	"github.com/yourorg/monorepo/services/event-worker/internal/handler"
 	"github.com/yourorg/monorepo/services/event-worker/internal/health"
@@ -51,7 +53,8 @@ func main() {
 		})
 		addr := fmt.Sprintf(":%d", cfg.PrometheusPort)
 		logger.Info("metrics server listening", slog.String("addr", addr))
-		if err := http.ListenAndServe(addr, mux); err != nil {
+		srv := &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+		if err := srv.ListenAndServe(); err != nil {
 			logger.Error("metrics server failed", slog.String("error", err.Error()))
 		}
 	}()
