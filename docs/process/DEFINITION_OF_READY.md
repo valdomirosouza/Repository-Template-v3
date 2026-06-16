@@ -39,6 +39,26 @@ Even exempt Issues must have a clear Problem Statement, size label, and Tech Lea
 
 ---
 
+## Product Discovery Artefacts (recommended for product-facing features)
+
+For **normal-feature** and **high-risk-feature** risk classes (ADR-0058 Phase 0) that change what a
+user or buyer experiences, the discovery package (`docs/product/FEAT-{id}/`) should additionally
+include the product-conception artefacts. These **strengthen** the mandatory "Discovery doc linked"
+gate above; they are **recommended, not independently blocking** (the Tech Lead may waive any with a
+one-line rationale in the Issue):
+
+- [ ] **Problem framed** — `problem-framing-canvas.md` (`docs/product/templates/problem-framing-canvas.md`)
+- [ ] **Persona(s) identified** — `persona.md` (user, and buyer if distinct)
+- [ ] **User story map** — `user-story-map.md` with the MVP slice and AC→test mapping
+- [ ] **Value hypothesis** — `value-hypothesis.md` with measurable target + kill criteria
+- [ ] **Success metrics** — `success-metrics.md`, each metric tied to a real signal/SLO
+- [ ] **GTM artefacts** — for features positioned as reusable products, a `docs/gtm/` brief
+      (`docs/gtm/GTM-README.md`)
+
+Bug fixes, spikes, chores, and internal-only changes do not need these (see Exemptions above).
+
+---
+
 ## Who Checks DoR?
 
 DoR is checked by the **Tech Lead** during the Grooming Ceremony (Phase 3, Step 4). The CI `harness/governance.yml` enforces a subset mechanically (spec file existence, ADR references). The remaining criteria are human-verified.
@@ -50,4 +70,5 @@ DoR is checked by the **Tech Lead** during the Grooming Ceremony (Phase 3, Step 
 - `docs/process/DEFINITION_OF_DONE.md` — criteria for completing a story
 - `docs/process/DEFINITION_OF_RELEASE.md` — criteria for promoting to production
 - `docs/process/RACI.md` — who owns each gate
-- `docs/process/WORKFLOW.md` — full 13-phase lifecycle
+- `docs/process/WORKFLOW.md` — full 15-phase (Phase 0–14) lifecycle
+- `docs/product/templates/` — product discovery templates · `docs/gtm/GTM-README.md` — GTM artefacts

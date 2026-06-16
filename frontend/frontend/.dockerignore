@@ -1,0 +1,13 @@
+# Keep the Docker build context clean and reproducible: dependencies are installed inside the image
+# (deps stage), and build output is produced inside the image (builder stage). Never copy host
+# artifacts in via `COPY . .`.
+node_modules
+.next
+coverage
+playwright-report
+.git
+.gitignore
+Dockerfile
+.dockerignore
+npm-debug.log*
+.env*.local
