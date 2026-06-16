@@ -78,24 +78,28 @@ test-infra-down: ## Stop integration-test infrastructure and wipe test volumes
 	docker compose -f docker-compose.test.yml down -v
 
 # ── Python ─────────────────────────────────────────────────────────────────
+# NOTE: the pytest/ruff/mypy/detect-secrets toolchain lives in the `dev` optional
+# extra. A bare `uv run` syncs to the DEFAULT deps and REMOVES that extra, so these
+# targets must pass `--extra dev` to stay green on a clean checkout (CI syncs it
+# explicitly via `uv sync --extra dev`; these run it inline).
 
 test-python: ## Python: full test suite with coverage (unit + integration)
-	uv run pytest tests/ --cov=src --cov-report=term-missing -q
+	uv run --extra dev pytest tests/ --cov=src --cov-report=term-missing -q
 
 test-unit-python: ## Python: unit tests only (no Docker required)
-	uv run pytest tests/unit/ -q
+	uv run --extra dev pytest tests/unit/ -q
 
 test-security-python: ## Python: guardrail + PII leakage + OWASP-LLM checks
-	uv run pytest tests/security/ -q
+	uv run --extra dev pytest tests/security/ -q
 
 lint-python: ## Python: ruff lint + format-check (repo-wide, matches CI) + mypy + secret scan
-	uv run ruff check .
-	uv run ruff format --check .
-	uv run mypy src/
-	uv run detect-secrets scan --baseline .secrets.baseline
+	uv run --extra dev ruff check .
+	uv run --extra dev ruff format --check .
+	uv run --extra dev mypy src/
+	uv run --extra dev detect-secrets scan --baseline .secrets.baseline
 
 format-python: ## Python: auto-format with ruff (repo-wide, matches CI's format check)
-	uv run ruff format .
+	uv run --extra dev ruff format .
 
 build-python: ## Python: build multi-stage Docker image
 	docker build --target production \
@@ -185,9 +189,12 @@ run-go: ## Go: start service with air hot-reload (SERVICE=<name>)
 	air -c services/$(SERVICE)/.air.toml
 
 gen-proto-go: ## Go: regenerate gRPC stubs from proto files into api/grpc/
+	# `module=` (not paths=source_relative) so output honours each proto's `option go_package`
+	# (github.com/yourorg/monorepo/api/grpc/...) and lands under api/grpc/<pkg>/ — keeping the
+	# generated stubs in sync with the `git diff --exit-code api/` drift gate in ci-go.yml.
 	find docs/api/grpc/proto -name "*.proto" | xargs \
-		protoc --go_out=. --go_opt=paths=source_relative \
-		       --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		protoc --go_out=. --go_opt=module=github.com/yourorg/monorepo \
+		       --go-grpc_out=. --go-grpc_opt=module=github.com/yourorg/monorepo \
 		       -I docs/api/grpc/proto
 
 gen-proto-python: ## Python: regenerate gRPC stubs from proto files into src/shared/generated/grpc/
