@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 
 from src.agents.hitl_gateway import (
@@ -23,6 +23,7 @@ from src.agents.hitl_gateway import (
     HITLStatus,
 )
 from src.api.rest.auth import Principal, require_hitl_operator
+from src.api.rest.pagination import DEFAULT_LIMIT, MAX_LIMIT, decode_cursor, paginate
 from src.observability.logger import get_logger
 
 logger = get_logger("api.hitl")
@@ -102,17 +103,39 @@ async def hitl_status(
     summary="List pending HITL approval requests",
 )
 async def list_pending_requests(
+    response: Response,
+    limit: int = Query(
+        default=DEFAULT_LIMIT,
+        ge=1,
+        le=MAX_LIMIT,
+        description="Max items to return (cursor page size)",
+    ),
+    cursor: str | None = Query(
+        default=None, description="Opaque pagination cursor (echo the X-Next-Cursor header)"
+    ),
     gateway: HITLGateway = Depends(get_hitl_gateway),
     operator: Principal = Depends(require_hitl_operator),
 ) -> list[HITLRequestSummary]:
-    """Return the pending HITL requests awaiting an operator decision.
+    """Return a page of pending HITL requests awaiting an operator decision.
 
     Requires a valid operator JWT (role ``hitl-operator``), the same control as the decision
     endpoint. Only the PII-masked ``context_summary`` is returned per request — the raw
     ``action_parameters`` never leave the gateway (REM-001, CLAUDE.md §3.1).
+
+    Paginated (api-standards.md §5): the body stays a JSON array; ``X-Limit``, ``X-Total-Returned``
+    and (when more remain) ``X-Next-Cursor`` are returned as headers. Pass ``?cursor=`` to continue.
     """
+    try:
+        offset = decode_cursor(cursor)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid cursor"
+        ) from exc
+
     pending = await gateway.list_pending()
-    return [
+    page, next_cursor = paginate(pending, limit, offset)
+
+    summaries = [
         HITLRequestSummary(
             request_id=r.request_id,
             agent_id=r.agent_id,
@@ -123,8 +146,13 @@ async def list_pending_requests(
             created_at=r.created_at,
             expires_at=r.expires_at,
         )
-        for r in pending
+        for r in page
     ]
+    response.headers["X-Limit"] = str(limit)
+    response.headers["X-Total-Returned"] = str(len(summaries))
+    if next_cursor is not None:
+        response.headers["X-Next-Cursor"] = next_cursor
+    return summaries
 
 
 @router.post(

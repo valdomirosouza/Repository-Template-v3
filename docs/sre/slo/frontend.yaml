@@ -1,0 +1,22 @@
+# Per-service SLO — frontend (ADR-0073).
+#
+# The `canary` block is read at runtime by cd-production.yml (via yq) at the 5% / 25% promotion
+# steps and the error-budget gate. NO canary threshold may be hard-coded in workflow YAML — that
+# is enforced by scripts/governance/check_slo_thresholds.py. A deployed service WITHOUT this file
+# fails the pipeline (no silent default).
+#
+# Schema: schema/service-slo.schema.json.
+#
+# [CONFIRM] — conservative template defaults for the Next.js app. p99 is set higher than the API
+# services because server-rendered page responses are slower than JSON API calls. Requires SRE-Lead
+# sign-off and tuning before production canary. See docs/governance/traceability-matrix.md.
+
+service: frontend
+
+canary:
+  # Fail canary promotion if the observed 5xx error ratio exceeds this (fraction of requests).
+  error_rate_max: 0.01 # [CONFIRM]
+  # Fail canary promotion if the observed p99 request latency exceeds this (seconds).
+  p99_latency_seconds_max: 1.0 # [CONFIRM] — SSR pages slower than JSON APIs
+  # Block promotion if the remaining error budget is at or below this ratio (burn-aware gate).
+  error_budget_min_ratio: 0.10 # [CONFIRM]
