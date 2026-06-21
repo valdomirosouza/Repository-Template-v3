@@ -260,7 +260,7 @@ jobs:
       - name: Run unit tests
         run: uv run pytest tests/unit/ -v --cov=src --cov-report=xml --cov-fail-under=85
       - name: Upload coverage
-        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           file: coverage.xml
           # Coverage reporting is non-blocking; the real 85% gate (ratchet, RFC-0020) is
@@ -376,7 +376,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           coverage xml
       - name: Upload combined coverage to Codecov
-        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           file: coverage.xml
           flags: combined
