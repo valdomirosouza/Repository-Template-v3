@@ -110,13 +110,13 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Login to container registry
         # GHCR via the built-in GITHUB_TOKEN (RFC-0010) — no stored registry secrets needed
         # (the workflow grants packages: write). For an external registry instead, swap
         # username/password to REGISTRY_USERNAME / REGISTRY_PASSWORD secrets.
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
         with:
           registry: ${{ vars.CONTAINER_REGISTRY }}
           username: ${{ github.actor }}
@@ -124,7 +124,7 @@ jobs:
 
       - name: Build and push release image
         id: build
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           push: true
